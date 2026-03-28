@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>上海交通大学生存挑战</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --sjtu-red: #aa1f24; --sjtu-dark: #8b1a1e; --gold: #c9a84c;
+    --bg: #0a0a12; --card: #13131f; --text: #e8e6e3; --dim: #8a8a9a;
+  }
+  body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .star { position: absolute; background: #fff; border-radius: 50%; animation: twinkle var(--dur) ease-in-out infinite alternate; }
+  @keyframes twinkle { 0%{opacity:0.2} 100%{opacity:0.8} }
+  .game-container { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }
+  .status-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; padding: 15px; background: var(--card); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); transition: all 0.5s; }
+  .status-bar.hidden { display: none; }
+  .stat { text-align: center; }
+  .stat-label { font-size: 11px; color: var(--dim); margin-bottom: 4px; letter-spacing: 1px; }
+  .stat-bar-bg { height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .stat-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease, background 0.5s; }
+  .stat-value { font-size: 20px; font-weight: 700; }
+  .stat-gpa .stat-bar-fill { background: linear-gradient(90deg, #f44, var(--gold), #4f4); }
+  .stat-health .stat-bar-fill { background: linear-gradient(90deg, #f44, #fa4, #4f4); }
+  .stat-social .stat-bar-fill { background: linear-gradient(90deg, #88f, #f4f); }
+  .stat-mental .stat-bar-fill { background: linear-gradient(90deg, #f44, #4af, #4ff); }
+  .stat-warn { animation: pulse 0.8s ease infinite alternate; }
+  @keyframes pulse { from{opacity:1} to{opacity:0.4} }
+  .class-badge { display: inline-block; background: rgba(170,31,36,0.25); border: 1px solid var(--sjtu-red); border-radius: 20px; padding: 2px 12px; font-size: 11px; color: var(--gold); margin-bottom: 8px; }
+  .semester-indicator { text-align: center; margin-bottom: 12px; font-size: 13px; color: var(--gold); letter-spacing: 2px; }
+  .semester-indicator.hidden { display: none; }
+  .main-card { flex: 1; background: var(--card); border-radius: 20px; padding: 40px; border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden; animation: fadeIn 0.6s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .main-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg, var(--sjtu-red), var(--gold), var(--sjtu-red)); }
+  .scene-icon { font-size: 64px; text-align: center; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(170,31,36,0.3)); }
+  .scene-title { font-size: 26px; font-weight: 900; text-align: center; margin-bottom: 12px; background: linear-gradient(135deg, #fff, var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .scene-text { font-size: 15px; line-height: 1.9; color: #ccc; margin-bottom: 30px; text-align: center; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .choices { display: flex; flex-direction: column; gap: 12px; max-width: 560px; margin: 0 auto; }
+  .choice-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 16px 24px; color: var(--text); font-size: 15px; cursor: pointer; transition: all 0.3s; text-align: left; font-family: inherit; position: relative; overflow: hidden; }
+  .choice-btn::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent); transition: left 0.5s; }
+  .choice-btn:hover::before { left: 100%; }
+  .choice-btn:hover { border-color: var(--sjtu-red); background: rgba(170,31,36,0.12); transform: translateX(6px); box-shadow: 0 0 25px rgba(170,31,36,0.15); }
+  .choice-btn:active { transform: translateX(6px) scale(0.98); }
+  .choice-emoji { margin-right: 10px; font-size: 18px; }
+  .choice-hint { display: block; font-size: 11px; color: var(--dim); margin-top: 4px; padding-left: 28px; }
+  .result-toast { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 24px; font-size: 14px; z-index: 100; animation: toastIn 0.4s ease, toastOut 0.4s ease 2s forwards; box-shadow: 0 10px 40px rgba(0,0,0,0.5); white-space: nowrap; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(-20px)} }
+  @keyframes toastOut { to{opacity:0;transform:translateX(-50%) translateY(-20px)} }
+  .result-positive { border-color: rgba(100,255,100,0.3); color: #8f8; }
+  .result-negative { border-color: rgba(255,100,100,0.3); color: #f88; }
+  .result-event { border-color: rgba(255,200,50,0.3); color: #fd8; }
+  .title-screen .scene-icon { font-size: 80px; margin-top: 20px; }
+  .title-screen .subtitle { color: var(--dim); font-size: 13px; text-align: center; margin-bottom: 20px; letter-spacing: 1px; }
+  .start-btn, .class-select-btn { display: block; margin: 10px auto; background: linear-gradient(135deg, var(--sjtu-red), var(--sjtu-dark)); border: none; border-radius: 50px; padding: 16px 60px; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.3s; box-shadow: 0 5px 30px rgba(170,31,36,0.4); }
+  .start-btn:hover, .class-select-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 40px rgba(170,31,36,0.6); }
+
+  /* 职业选择 */
+  .class-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; max-width: 600px; margin: 20px auto; }
+  .class-card { background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.3s; text-align: center; }
+  .class-card:hover { border-color: var(--sjtu-red); background: rgba(170,31,36,0.1); transform: translateY(-4px); box-shadow: 0 8px 30px rgba(170,31,36,0.2); }
+  .class-card.selected { border-color: var(--gold); background: rgba(201,168,76,0.1); box-shadow: 0 0 20px rgba(201,168,76,0.2); }
+  .class-icon { font-size: 42px; margin-bottom: 8px; }
+  .class-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .class-desc { font-size: 12px; color: var(--dim); margin-bottom: 10px; line-height: 1.5; }
+  .class-stats { font-size: 11px; color: var(--gold); line-height: 1.6; }
+  .class-passive { font-size: 11px; color: #8cf; margin-top: 6px; font-style: italic; }
+
+  .ending-badge { width: 120px; height: 120px; margin: 0 auto 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 56px; border: 3px solid var(--gold); box-shadow: 0 0 40px rgba(201,168,76,0.3); }
+  .ending-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 400px; margin: 20px auto; font-size: 13px; color: var(--dim); }
+  .ending-stats div { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; text-align: center; }
+  .ending-stats .es-val { font-size: 22px; font-weight: 700; color: var(--text); }
+  .restart-btn { display: block; margin: 25px auto 0; background: transparent; border: 2px solid var(--sjtu-red); border-radius: 50px; padding: 12px 40px; color: var(--sjtu-red); font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.3s; }
+  .restart-btn:hover { background: var(--sjtu-red); color: #fff; }
+  .difficulty-tag { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
+  .diff-easy { background: rgba(100,255,100,0.15); color: #8f8; }
+  .diff-normal { background: rgba(255,200,50,0.15); color: #fd8; }
+  .diff-hard { background: rgba(255,80,80,0.15); color: #f88; }
+  .diff-hell { background: rgba(200,50,255,0.15); color: #f8f; }
+  /* 任务系统 */
+  .quest-toggle { position: fixed; bottom: 24px; right: 24px; z-index: 50; background: linear-gradient(135deg, #2a1a3e, #1a2a4e); border: 2px solid rgba(140,120,255,0.4); border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 20px rgba(100,80,200,0.3); font-family: inherit; color: #fff; }
+  .quest-toggle:hover { transform: scale(1.1); box-shadow: 0 6px 30px rgba(100,80,200,0.5); }
+  .quest-toggle.hidden { display: none; }
+  .quest-toggle .quest-count { position: absolute; top: -4px; right: -4px; background: var(--sjtu-red); color: #fff; font-size: 11px; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .quest-panel { position: fixed; top: 0; right: -420px; width: 400px; max-width: 90vw; height: 100vh; background: #0e0e1a; border-left: 1px solid rgba(140,120,255,0.2); z-index: 200; transition: right 0.4s ease; overflow-y: auto; padding: 20px; }
+  .quest-panel.open { right: 0; }
+  .quest-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 199; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .quest-overlay.open { opacity: 1; pointer-events: auto; }
+  .quest-panel-title { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+  .quest-panel-sub { font-size: 12px; color: var(--dim); margin-bottom: 16px; }
+  .quest-close { background: none; border: none; color: var(--dim); font-size: 24px; cursor: pointer; padding: 4px 8px; }
+  .quest-close:hover { color: #fff; }
+  .quest-section-title { font-size: 13px; color: rgba(140,120,255,0.7); font-weight: 700; margin: 16px 0 8px; letter-spacing: 1px; border-bottom: 1px solid rgba(140,120,255,0.15); padding-bottom: 4px; }
+  .quest-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin-bottom: 10px; transition: all 0.3s; }
+  .quest-card:hover { border-color: rgba(140,120,255,0.3); }
+  .quest-card.active { border-color: rgba(140,120,255,0.5); background: rgba(140,120,255,0.06); }
+  .quest-card.completed { border-color: rgba(100,255,100,0.4); background: rgba(100,255,100,0.05); }
+  .quest-card.failed { border-color: rgba(255,80,80,0.3); background: rgba(255,80,80,0.04); opacity: 0.6; }
+  .quest-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .quest-icon { font-size: 28px; }
+  .quest-name { font-size: 15px; font-weight: 700; color: #fff; flex: 1; }
+  .quest-status-tag { font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 700; }
+  .qst-active { background: rgba(140,120,255,0.2); color: #a8a0ff; }
+  .qst-done { background: rgba(100,255,100,0.2); color: #8f8; }
+  .qst-fail { background: rgba(255,80,80,0.2); color: #f88; }
+  .quest-desc { font-size: 12px; color: var(--dim); line-height: 1.6; margin-bottom: 8px; }
+  .quest-reqs { font-size: 11px; color: #aaa; margin-bottom: 10px; }
+  .quest-reqs span { display: inline-block; margin-right: 10px; padding: 1px 6px; border-radius: 4px; }
+  .quest-reqs .req-met { background: rgba(100,255,100,0.1); color: #8f8; }
+  .quest-reqs .req-unmet { background: rgba(255,80,80,0.1); color: #f88; }
+  .quest-btn { background: rgba(140,120,255,0.15); border: 1px solid rgba(140,120,255,0.4); border-radius: 8px; padding: 6px 16px; color: #a8a0ff; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.3s; }
+  .quest-btn:hover { background: rgba(140,120,255,0.3); }
+  .quest-btn.abandon { background: rgba(255,80,80,0.1); border-color: rgba(255,80,80,0.3); color: #f88; }
+  .quest-btn.abandon:hover { background: rgba(255,80,80,0.25); }
+  .quest-reward { font-size: 11px; color: var(--gold); font-style: italic; margin-top: 4px; }
+  .quest-ending-list { margin-top: 20px; }
+  .quest-ending-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; color: var(--dim); }
+  .quest-ending-item .qe-icon { font-size: 18px; }
+
+  @media (max-width: 600px) {
+    .main-card { padding: 24px 18px; }
+    .status-bar { grid-template-columns: repeat(2, 1fr); }
+    .class-grid { grid-template-columns: 1fr; }
+    .scene-title { font-size: 22px; }
+    .scene-text { font-size: 14px; }
+    .quest-panel { width: 100%; right: -100%; }
+    .quest-toggle { bottom: 16px; right: 16px; width: 48px; height: 48px; font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<button class="quest-toggle hidden" id="questToggle" onclick="toggleQuestPanel()">📋<span class="quest-count" id="questCount" style="display:none">0</span></button>
+<div class="quest-overlay" id="questOverlay" onclick="toggleQuestPanel()"></div>
+<div class="quest-panel" id="questPanel"></div>
+<div class="game-container">
+  <div class="status-bar hidden" id="statusBar">
+    <div class="stat stat-gpa"><div class="stat-label">📚 GPA</div><div class="stat-value" id="gpaVal">3.0</div><div class="stat-bar-bg"><div class="stat-bar-fill" id="gpaBar" style="width:75%"></div></div></div>
+    <div class="stat stat-health"><div class="stat-label">💪 体力</div><div class="stat-value" id="healthVal">80</div><div class="stat-bar-bg"><div class="stat-bar-fill" id="healthBar" style="width:80%"></div></div></div>
+    <div class="stat stat-social"><div class="stat-label">👥 社交</div><div class="stat-value" id="socialVal">60</div><div class="stat-bar-bg"><div class="stat-bar-fill" id="socialBar" style="width:60%"></div></div></div>
+    <div class="stat stat-mental"><div class="stat-label">🧠 心理</div><div class="stat-value" id="mentalVal">70</div><div class="stat-bar-bg"><div class="stat-bar-fill" id="mentalBar" style="width:70%"></div></div></div>
+  </div>
+  <div class="semester-indicator hidden" id="semesterInd">第一学期</div>
+  <div class="main-card" id="mainCard"></div>
+</div>
+
+<script>
+// ==================== 职业定义 ====================
+const CLASSES = {
+  xueba: {
+    icon: '🤓', name: '学霸', difficulty: 'normal', diffClass: 'diff-normal',
+    desc: '从小到大的尖子生，学习是刻在DNA里的。但社交？不存在的。',
+    gpa: 3.5, health: 55, social: 30, mental: 55,
+    passive: '被动：考试前自动 GPA+0.1，但每学期社交-5',
+    passiveFn(s) { s.gpa = Math.min(4, +(s.gpa + 0.1).toFixed(1)); s.social = Math.max(0, s.social - 5); },
+  },
+  sheniu: {
+    icon: '🎤', name: '社牛', difficulty: 'normal', diffClass: 'diff-normal',
+    desc: '天生的社交达人，走到哪儿都是焦点。但一个人坐下来学习？要命。',
+    gpa: 2.5, health: 65, social: 85, mental: 60,
+    passive: '被动：每学期社交+5，但GPA自动-0.1（太多局了）',
+    passiveFn(s) { s.social = Math.min(100, s.social + 5); s.gpa = Math.max(0, +(s.gpa - 0.1).toFixed(1)); },
+  },
+  tiyu: {
+    icon: '🏃', name: '体育特长生', difficulty: 'hard', diffClass: 'diff-hard',
+    desc: '靠体育特招进交大。体能无敌，但高数是什么？能吃吗？',
+    gpa: 2.0, health: 95, social: 55, mental: 60,
+    passive: '被动：每学期体力+10，但GPA-0.1（基础太差）',
+    passiveFn(s) { s.health = Math.min(100, s.health + 10); s.gpa = Math.max(0, +(s.gpa - 0.1).toFixed(1)); },
+  },
+  fuerdai: {
+    icon: '💎', name: '富二代', difficulty: 'easy', diffClass: 'diff-easy',
+    desc: '家里有矿，从小见过大世面。心态好、社交广，但容易摆烂。',
+    gpa: 2.6, health: 70, social: 75, mental: 80,
+    passive: '被动：每学期心理+5，但有30%概率摆烂GPA-0.2',
+    passiveFn(s) { s.mental = Math.min(100, s.mental + 5); if (Math.random() < 0.3) s.gpa = Math.max(0, +(s.gpa - 0.2).toFixed(1)); },
+  },
+  juanwang: {
+    icon: '📚', name: '卷王', difficulty: 'hard', diffClass: 'diff-hard',
+    desc: '不卷会死星人。GPA就是生命，但身体和心理都在透支。',
+    gpa: 3.8, health: 35, social: 25, mental: 35,
+    passive: '被动：每学期GPA+0.1，但体力-8、心理-8',
+    passiveFn(s) { s.gpa = Math.min(4, +(s.gpa + 0.1).toFixed(1)); s.health = Math.max(0, s.health - 8); s.mental = Math.max(0, s.mental - 8); },
+  },
+  putong: {
+    icon: '😐', name: '小镇做题家', difficulty: 'hell', diffClass: 'diff-hell',
+    desc: '从十八线小城考进交大，什么都要从头开始。没有背景，只有背影。',
+    gpa: 2.8, health: 50, social: 20, mental: 40,
+    passive: '被动：逆境成长——属性低于30时，该属性每学期+3',
+    passiveFn(s) {
+      if (s.health > 0 && s.health < 30) s.health = Math.min(100, s.health + 3);
+      if (s.social > 0 && s.social < 30) s.social = Math.min(100, s.social + 3);
+      if (s.mental > 0 && s.mental < 30) s.mental = Math.min(100, s.mental + 3);
+    },
+  },
+};
+
+// ==================== 随机事件 ====================
+const RANDOM_EVENTS = [
+  { text: '🦠 流感席卷宿舍楼，你也中招了', effect: { health: -15, mental: -5 }, toast: '流感来袭！体力-15 心理-5' },
+  { text: '💻 笔记本电脑突然坏了，论文没存', effect: { mental: -20, gpa: -0.1 }, toast: '电脑罢工！心理-20 GPA-0.1' },
+  { text: '🏆 意外获得了一个奖学金！', effect: { mental: 15, gpa: 0.1 }, toast: '奖学金！心理+15 GPA+0.1' },
+  { text: '🌧️ 连续一个月阴雨天，心情阴郁', effect: { mental: -12 }, toast: '阴雨连绵 心理-12' },
+  { text: '😤 和室友因为作息问题大吵一架', effect: { social: -15, mental: -10 }, toast: '室友矛盾！社交-15 心理-10' },
+  { text: '📱 刷手机到凌晨三点停不下来', effect: { health: -10, gpa: -0.1, mental: -5 }, toast: '手机成瘾 体力-10 GPA-0.1' },
+  { text: '🍜 发现了一家超好吃的校外小馆', effect: { mental: 10, social: 5, health: -5 }, toast: '美食治愈！心理+10' },
+  { text: '📊 突然被通知需要补交一份作业', effect: { mental: -10, gpa: -0.1 }, toast: '补交作业！心理-10 GPA-0.1' },
+  { text: '🎪 学校举办了超棒的文化节', effect: { social: 10, mental: 10, health: -5 }, toast: '文化节！社交+10 心理+10' },
+  { text: '😰 选课系统崩溃，你没抢到想要的课', effect: { mental: -10, gpa: -0.1 }, toast: '选课失败 心理-10' },
+  { text: '🏃 被强制要求参加体测', effect: { health: -10, mental: -5 }, toast: '体测来袭 体力-10' },
+  { text: '💸 这个月生活费超支了', effect: { mental: -10, social: -5 }, toast: '钱包空了 心理-10' },
+  { text: '🐱 在校园里撸到了一只超可爱的猫', effect: { mental: 12 }, toast: '猫猫治愈 心理+12' },
+  { text: '📖 教授在课上点名回答问题，你答得很好', effect: { gpa: 0.1, mental: 5 }, toast: '课堂表现佳 GPA+0.1' },
+  { text: '🤧 换季过敏，难受了一整周', effect: { health: -12, mental: -5 }, toast: '过敏季 体力-12' },
+  { text: '👻 期中考发现复习的内容全没考', effect: { gpa: -0.2, mental: -15 }, toast: '考试翻车！GPA-0.2 心理-15' },
+  { text: '🎉 老朋友来上海找你玩了一周末', effect: { social: 8, mental: 10, health: -5 }, toast: '朋友来访 心理+10' },
+  { text: '💤 失眠了整整一周', effect: { health: -12, mental: -10, gpa: -0.1 }, toast: '失眠 体力-12 心理-10' },
+  { text: '🔫 CS更新了新地图，通宵研究点位', effect: { health: -12, mental: 8, gpa: -0.1 }, toast: 'CS新地图！体力-12 心理+8' },
+  { text: '🎮 室友组队CS五连胜，宿舍氛围爆棚', effect: { social: 10, mental: 8, health: -8, gpa: -0.1 }, toast: 'CS五连胜！社交+10 心理+8' },
+  { text: '💻 CS排位遇到挂壁，气到砸鼠标', effect: { mental: -15, health: -3 }, toast: '遇到外挂 心理-15' },
+  { text: '🔫 CS里被队友TK，一气之下骂了一架', effect: { mental: -8, social: -5 }, toast: '队友矛盾 心理-8 社交-5' },
+  { text: '🏆 CS段位突然暴涨，心情大好', effect: { mental: 12, health: -5 }, toast: 'CS上分！心理+12' },
+  { text: '💋 前任发来消息"在吗"，你纠结了一晚上', effect: { mental: -12, health: -5 }, toast: '前任骚扰 心理-12' },
+  { text: '💕 暗恋对象在朋友圈秀恩爱了', effect: { mental: -10 }, toast: '暗恋破碎 心理-10' },
+  { text: '🌹 有人在宿舍楼下表白被拒，场面尴尬', effect: { mental: -3, social: 3 }, toast: '吃瓜 社交+3' },
+  { text: '📱 探探上match了一个超好看的人', effect: { mental: 8, health: -3 }, toast: 'Match! 心理+8' },
+  { text: '💔 室友分手了，整个宿舍都很压抑', effect: { mental: -8, social: -3 }, toast: '室友分手 心理-8' },
+];
+
+// ==================== 学期衰减（每学期自动扣除）====================
+const SEMESTER_DECAY = { health: -8, mental: -6, social: -3 };
+
+// ==================== 任务系统 ====================
+const QUESTS = {
+  baoyan: {
+    icon: '🎓', name: '保研',
+    desc: '凭借优秀的GPA获得研究生推免资格，继续在交大或其他名校深造。',
+    reward: '结局：保研上岸',
+    unlockSemester: 3,
+    check: (s) => s.gpa >= 3.5 && s.flags.inLab,
+    reqText: (s) => [
+      { label: `GPA ≥ 3.5（当前 ${s.gpa.toFixed(1)}）`, met: s.gpa >= 3.5 },
+      { label: `加入过实验室`, met: !!s.flags.inLab },
+    ],
+    ending: { icon: '🎓', title: '保研上岸 · 学术新星', rank: 'S',
+      text: '你成功获得了研究生推免资格！\n\n导师在邮件里写道："欢迎加入课题组，期待你的表现。"\n\n四年的努力没有白费。当你在研究生录取系统上看到"已录取"三个字时，\n你深吸一口气，给爸妈打了个电话。\n\n"爸，妈，我保研成功了。"\n\n电话那头沉默了两秒，然后你听到了妈妈的哭声。\n\n新的旅程即将开始。这次，你准备好了。' },
+  },
+  kaoyan: {
+    icon: '📖', name: '考研',
+    desc: '通过全国研究生入学考试，用分数证明自己的实力。',
+    reward: '结局：考研成功',
+    unlockSemester: 5,
+    check: (s) => s.gpa >= 2.5 && s.mental >= 40 && s.flags.gradSchool,
+    reqText: (s) => [
+      { label: `GPA ≥ 2.5（当前 ${s.gpa.toFixed(1)}）`, met: s.gpa >= 2.5 },
+      { label: `心理 ≥ 40（当前 ${s.mental}）`, met: s.mental >= 40 },
+      { label: `选择过考研路线`, met: !!s.flags.gradSchool },
+    ],
+    ending: { icon: '📖', title: '考研上岸 · 逆袭之路', rank: 'A+',
+      text: '考研成绩出来的那天，你的手在发抖。\n\n当你看到自己的分数超过国家线60分的时候，\n你在图书馆里捂着嘴，眼泪夺眶而出。\n\n那些凌晨五点半起床占座的日子，\n那些做了三遍数学真题的夜晚，\n那些室友睡着后你还在默背政治的时刻——\n\n全都值了。\n\n你拍了张成绩截图发给了最好的朋友。\n对方回了三个字："牛逼！"' },
+  },
+  chuguo: {
+    icon: '✈️', name: '出国留学',
+    desc: '申请海外名校，去看看更大的世界。需要优秀的GPA和广阔的视野。',
+    reward: '结局：留学海外',
+    unlockSemester: 4,
+    check: (s) => s.gpa >= 3.2 && s.social >= 40 && s.flags.aimAbroad,
+    reqText: (s) => [
+      { label: `GPA ≥ 3.2（当前 ${s.gpa.toFixed(1)}）`, met: s.gpa >= 3.2 },
+      { label: `社交 ≥ 40（当前 ${s.social}）`, met: s.social >= 40 },
+      { label: `选择过出国路线`, met: !!s.flags.aimAbroad },
+    ],
+    ending: { icon: '✈️', title: '留学海外 · 星辰大海', rank: 'S',
+      text: '你收到了offer邮件。\n\n"Congratulations! We are pleased to offer you admission to..."\n\n你盯着屏幕看了整整一分钟，确认自己没有眼花。\n\n从托福首考的崩溃，到GRE背单词背到想吐，\n从文书改了十几版的绝望，到面试时紧张到声音发颤——\n\n所有的痛苦，在这一刻都变成了勋章。\n\n你买了一张单程机票。\n窗外是浦东机场的跑道，你即将飞向一个全新的世界。\n\n"交大再见。世界你好。"' },
+  },
+  dachang: {
+    icon: '💼', name: '大厂就业',
+    desc: '拿到互联网大厂的offer，成为年薪百万的打工人（起码先入个职）。',
+    reward: '结局：大厂offer',
+    unlockSemester: 5,
+    check: (s) => s.social >= 50 && (s.flags.internship || s.flags.bigCompany) && s.flags.jobHunting,
+    reqText: (s) => [
+      { label: `社交 ≥ 50（当前 ${s.social}）`, met: s.social >= 50 },
+      { label: `有过实习经历`, met: !!(s.flags.internship || s.flags.bigCompany) },
+      { label: `参加过秋招`, met: !!s.flags.jobHunting },
+    ],
+    ending: { icon: '💼', title: '大厂入职 · 互联网新人', rank: 'A+',
+      text: '秋招尾声，你收到了心仪大厂的offer call。\n\nHR在电话里说了薪资待遇，你努力保持冷静，\n但挂了电话后在宿舍蹦了三下。\n\n室友问："多少？"\n你报了个数字。\n宿舍沉默了两秒，然后爆发出一阵尖叫。\n\n"今晚必须搓一顿！"\n\n你看着手里的offer letter，想起了当初在面试间里紧张到手心出汗的自己。\n\n从实习生到正式员工，你终于走出了第一步。\n\n打工人，打工魂。但至少，是大厂的魂。' },
+  },
+  kaogong: {
+    icon: '🏛️', name: '考公上岸',
+    desc: '参加公务员考试，追求稳定的体制内生活。需要扎实的基础和强大的心态。',
+    reward: '结局：公务员上岸',
+    unlockSemester: 6,
+    check: (s) => s.gpa >= 2.5 && s.mental >= 50 && s.health >= 40,
+    reqText: (s) => [
+      { label: `GPA ≥ 2.5（当前 ${s.gpa.toFixed(1)}）`, met: s.gpa >= 2.5 },
+      { label: `心理 ≥ 50（当前 ${s.mental}）`, met: s.mental >= 50 },
+      { label: `体力 ≥ 40（当前 ${s.health}）`, met: s.health >= 40 },
+    ],
+    ending: { icon: '🏛️', title: '上岸成功 · 人民公仆', rank: 'A',
+      text: '公务员考试的成绩出来了——行测78，申论72。\n面试你发挥出色，综合排名第一。\n\n体检、政审、公示……一切顺利。\n\n你终于等到了那封录取通知。\n\n爸妈比你还激动："咱家终于出了个吃公粮的！"\n\n你收拾好行李，准备去一个你从没去过的城市报到。\n窗外是上海的天际线，你深深看了一眼。\n\n"交大四年，值了。"\n\n稳定，是另一种勇敢。' },
+  },
+  chuangye: {
+    icon: '🚀', name: '创业',
+    desc: '带着交大的光环和积累的人脉，开始自己的创业之路。',
+    reward: '结局：创业起步',
+    unlockSemester: 4,
+    check: (s) => s.social >= 60 && s.mental >= 40 && s.flags.startup,
+    reqText: (s) => [
+      { label: `社交 ≥ 60（当前 ${s.social}）`, met: s.social >= 60 },
+      { label: `心理 ≥ 40（当前 ${s.mental}）`, met: s.mental >= 40 },
+      { label: `有过创业经历`, met: !!s.flags.startup },
+    ],
+    ending: { icon: '🚀', title: '创业者 · 从零到一', rank: 'A+',
+      text: '毕业前，你的创业项目拿到了天使轮融资。\n\n投资人说："我投的不是你的项目，是你这个人。"\n\n你和合伙人租了一间小办公室，在张江高科技园区。\n办公桌是宜家最便宜的款，\n但墙上挂着你们在"创青春"比赛时的合照。\n\n那是梦开始的地方。\n\n创业九死一生，前路充满未知。\n但你已经习惯了在不确定中寻找确定。\n\n毕竟——你可是从交大活着毕业的人。' },
+  },
+  dianjing: {
+    icon: '🔫', name: '职业电竞',
+    desc: '走上职业CS选手的道路。需要极大的勇气和实力。',
+    reward: '结局：电竞传奇',
+    unlockSemester: 4,
+    check: (s) => s.flags.csCareer && s.mental >= 50 && s.social >= 40,
+    reqText: (s) => [
+      { label: `选择电竞道路`, met: !!s.flags.csCareer },
+      { label: `心理 ≥ 50（当前 ${s.mental}）`, met: s.mental >= 50 },
+      { label: `社交 ≥ 40（当前 ${s.social}）`, met: s.social >= 40 },
+    ],
+    ending: null, // 已有电竞结局，复用
+  },
+};
+
+// ==================== 游戏状态 ====================
+const state = { gpa: 3.0, health: 80, social: 60, mental: 70, semester: 1, scene: 'title', flags: {}, totalSemesters: 8, playerClass: null, activeQuests: [], completedQuests: [] };
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+function applyStat(changes) {
+  if (changes.gpa !== undefined) state.gpa = clamp(+(state.gpa + changes.gpa).toFixed(1), 0, 4.0);
+  if (changes.health !== undefined) state.health = clamp(state.health + changes.health, 0, 100);
+  if (changes.social !== undefined) state.social = clamp(state.social + changes.social, 0, 100);
+  if (changes.mental !== undefined) state.mental = clamp(state.mental + changes.mental, 0, 100);
+  if (changes.flags) Object.assign(state.flags, changes.flags);
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById('gpaVal').textContent = state.gpa.toFixed(1);
+  document.getElementById('healthVal').textContent = state.health;
+  document.getElementById('socialVal').textContent = state.social;
+  document.getElementById('mentalVal').textContent = state.mental;
+  document.getElementById('gpaBar').style.width = (state.gpa / 4 * 100) + '%';
+  document.getElementById('healthBar').style.width = state.health + '%';
+  document.getElementById('socialBar').style.width = state.social + '%';
+  document.getElementById('mentalBar').style.width = state.mental + '%';
+  // 低属性警告
+  ['gpa','health','social','mental'].forEach(k => {
+    const el = document.getElementById(k + 'Val');
+    const v = k === 'gpa' ? state.gpa : state[k];
+    const threshold = k === 'gpa' ? 1.5 : 25;
+    el.parentElement.classList.toggle('stat-warn', v <= threshold && v > 0);
+  });
+  const semNames = ['', '大一·秋', '大一·春', '大二·秋', '大二·春', '大三·秋', '大三·春', '大四·秋', '大四·春'];
+  const classInfo = CLASSES[state.playerClass];
+  const badge = classInfo ? `<span class="class-badge">${classInfo.icon} ${classInfo.name}</span> ` : '';
+  document.getElementById('semesterInd').innerHTML = `${badge}⏳ ${semNames[state.semester] || '未知'} — 第 ${state.semester}/${state.totalSemesters} 学期`;
+}
+
+function showToast(text, type) {
+  const t = document.createElement('div');
+  t.className = 'result-toast ' + (type === 'positive' ? 'result-positive' : type === 'event' ? 'result-event' : 'result-negative');
+  t.textContent = text;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function showStatus(v) {
+  document.getElementById('statusBar').classList.toggle('hidden', !v);
+  document.getElementById('semesterInd').classList.toggle('hidden', !v);
+  document.getElementById('questToggle').classList.toggle('hidden', !v);
+  if (v) updateQuestCount();
+}
+
+// ==================== 任务面板 ====================
+function toggleQuestPanel() {
+  const panel = document.getElementById('questPanel');
+  const overlay = document.getElementById('questOverlay');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  overlay.classList.toggle('open');
+  if (!isOpen) renderQuestPanel();
+}
+
+function updateQuestCount() {
+  const cnt = state.activeQuests.length;
+  const el = document.getElementById('questCount');
+  el.textContent = cnt;
+  el.style.display = cnt > 0 ? 'flex' : 'none';
+}
+
+function acceptQuest(id) {
+  if (!state.activeQuests.includes(id) && !state.completedQuests.includes(id)) {
+    state.activeQuests.push(id);
+    showToast(`📋 接取任务：${QUESTS[id].name}`, 'event');
+    updateQuestCount();
+    renderQuestPanel();
+  }
+}
+
+function abandonQuest(id) {
+  state.activeQuests = state.activeQuests.filter(q => q !== id);
+  showToast(`❌ 放弃任务：${QUESTS[id].name}`, 'negative');
+  updateQuestCount();
+  renderQuestPanel();
+}
+
+function checkQuests() {
+  // 检查所有活跃任务的完成状态
+  state.activeQuests.forEach(id => {
+    const q = QUESTS[id];
+    if (q.check(state) && !state.completedQuests.includes(id)) {
+      state.completedQuests.push(id);
+    }
+  });
+}
+
+function renderQuestPanel() {
+  const panel = document.getElementById('questPanel');
+  const available = Object.entries(QUESTS).filter(([id, q]) =>
+    state.semester >= q.unlockSemester && !state.activeQuests.includes(id) && !state.completedQuests.includes(id)
+  );
+  const active = state.activeQuests.map(id => [id, QUESTS[id]]);
+
+  let html = `<div class="quest-panel-title">📋 毕业目标 <button class="quest-close" onclick="toggleQuestPanel()">✕</button></div>`;
+  html += `<div class="quest-panel-sub">接取目标后，在毕业时满足条件即可解锁专属结局。可以同时追求多个目标。</div>`;
+
+  // 进行中的任务
+  if (active.length > 0) {
+    html += `<div class="quest-section-title">🎯 当前目标（${active.length}）</div>`;
+    active.forEach(([id, q]) => {
+      const met = q.check(state);
+      const reqs = q.reqText(state);
+      html += `<div class="quest-card active">
+        <div class="quest-header">
+          <span class="quest-icon">${q.icon}</span>
+          <span class="quest-name">${q.name}</span>
+          <span class="quest-status-tag ${met ? 'qst-done' : 'qst-active'}">${met ? '✓ 已达成' : '进行中'}</span>
+        </div>
+        <div class="quest-desc">${q.desc}</div>
+        <div class="quest-reqs">${reqs.map(r => `<span class="${r.met ? 'req-met' : 'req-unmet'}">${r.met ? '✓' : '✗'} ${r.label}</span>`).join('')}</div>
+        <div class="quest-reward">🏆 ${q.reward}</div>
+        <div style="margin-top:8px;"><button class="quest-btn abandon" onclick="abandonQuest('${id}')">放弃此目标</button></div>
+      </div>`;
+    });
+  }
+
+  // 可接取的任务
+  if (available.length > 0) {
+    html += `<div class="quest-section-title">📜 可接取的目标（${available.length}）</div>`;
+    available.forEach(([id, q]) => {
+      const reqs = q.reqText(state);
+      html += `<div class="quest-card">
+        <div class="quest-header">
+          <span class="quest-icon">${q.icon}</span>
+          <span class="quest-name">${q.name}</span>
+        </div>
+        <div class="quest-desc">${q.desc}</div>
+        <div class="quest-reqs">${reqs.map(r => `<span class="${r.met ? 'req-met' : 'req-unmet'}">${r.met ? '✓' : '✗'} ${r.label}</span>`).join('')}</div>
+        <div class="quest-reward">🏆 ${q.reward}</div>
+        <div style="margin-top:8px;"><button class="quest-btn" onclick="acceptQuest('${id}')">接取此目标</button></div>
+      </div>`;
+    });
+  }
+
+  // 尚未解锁的任务
+  const locked = Object.entries(QUESTS).filter(([id, q]) =>
+    state.semester < q.unlockSemester && !state.activeQuests.includes(id)
+  );
+  if (locked.length > 0) {
+    html += `<div class="quest-section-title">🔒 未解锁</div>`;
+    locked.forEach(([id, q]) => {
+      const semNames = ['', '大一·秋', '大一·春', '大二·秋', '大二·春', '大三·秋', '大三·春', '大四·秋', '大四·春'];
+      html += `<div class="quest-card" style="opacity:0.4">
+        <div class="quest-header">
+          <span class="quest-icon">${q.icon}</span>
+          <span class="quest-name">${q.name}</span>
+          <span style="font-size:11px;color:var(--dim);">🔒 ${semNames[q.unlockSemester]}解锁</span>
+        </div>
+      </div>`;
+    });
+  }
+
+  panel.innerHTML = html;
+}
+
+// 学期切换时触发
+function onSemesterChange(newSem) {
+  state.semester = newSem;
+  // 学期衰减
+  applyStat(SEMESTER_DECAY);
+  // 职业被动
+  const cls = CLASSES[state.playerClass];
+  if (cls && cls.passiveFn) cls.passiveFn(state);
+  // 随机事件(60%概率触发)
+  if (Math.random() < 0.6) {
+    const evt = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+    applyStat(evt.effect);
+    setTimeout(() => showToast('⚡ ' + evt.toast, 'event'), 300);
+  }
+  // 检查是否有新任务可解锁
+  const newlyAvailable = Object.entries(QUESTS).filter(([id, q]) =>
+    q.unlockSemester === newSem && !state.activeQuests.includes(id) && !state.completedQuests.includes(id)
+  );
+  if (newlyAvailable.length > 0) {
+    setTimeout(() => showToast(`📋 新目标解锁！点击右下角查看`, 'event'), 800);
+  }
+  // 检查已接任务的完成状态
+  checkQuests();
+  updateUI();
+  updateQuestCount();
+}
+
+// ==================== 场景定义 ====================
+const scenes = {
+  title: {
+    icon: '🏫', title: '上海交通大学 · 生存挑战',
+    text: '你收到了上海交通大学的录取通知书。\n从踏入校门的那一刻起，你的四年大学生涯正式开始。\n你能顺利毕业吗？\n\n🎯 保持 GPA、体力、社交、心理四项属性存活8个学期\n⚠️ 任何属性归零 = 游戏结束\n💀 每学期自动衰减：体力-8 心理-6 社交-3\n⚡ 随机事件可能随时发生\n📋 接取毕业目标（保研/就业/出国等），达成条件解锁专属结局',
+    isTitle: true,
+  },
+
+  classSelect: {
+    icon: '🎭', title: '选择你的身份',
+    text: '每个人来到交大的起点不同。\n你是谁？',
+    isClassSelect: true,
+  },
+
+  // ========== 大一·秋 ==========
+  s1_intro: {
+    icon: '🍂', title: '开学报到',
+    text: '九月的上海依然炎热。你拖着行李箱来到闵行校区，看着广阔的校园，心中充满期待与不安。\n\n室友来自五湖四海，宿舍楼下的食堂排着长队。军训即将开始……',
+    choices: [
+      { text: '💪 认真参加军训，锻炼意志', hint: '体力+5, 心理+5, 社交+5', next: 's1_military_hard', effect: { health: 5, mental: 5, social: 5 } },
+      { text: '🤒 想办法开病假条划水', hint: '体力+5, 心理-8, 社交-5', next: 's1_military_skip', effect: { health: 5, mental: -8, social: -5 } },
+      { text: '📱 军训间隙疯狂社交', hint: '社交+12, 体力-10', next: 's1_military_social', effect: { social: 12, health: -10 } },
+    ],
+  },
+  s1_military_hard: {
+    icon: '🎖️', title: '军训标兵',
+    text: '两周军训下来，你获得了"军训标兵"称号。\n但烈日暴晒让你黑了三个色号，脚上磨了好几个水泡。\n\n隔壁连队有个人老是偷偷看你……',
+    choices: [
+      { text: '😳 好像……还挺好看的？', hint: '社交+5, 心理+3', next: 's1_course', effect: { social: 5, mental: 3, flags: { militaryCrush: true } } },
+      { text: '继续 →', next: 's1_course', effect: {} },
+    ],
+  },
+  s1_military_skip: {
+    icon: '😅', title: '划水成功',
+    text: '你逃过了大部分军训。但看着同学们热火朝天，你心里空落落的。\n\n更糟糕的是——辅导员记住了你的名字，不是好的那种。',
+    choices: [{ text: '继续 →', next: 's1_course', effect: {} }],
+  },
+  s1_military_social: {
+    icon: '📱', title: '社交达人',
+    text: '军训结束你加了200多个微信好友。\n但军训时偷玩手机被教官抓到罚站了两小时，体力消耗不小。',
+    choices: [{ text: '继续 →', next: 's1_course', effect: {} }],
+  },
+
+  s1_course: {
+    icon: '📖', title: '第一次选课',
+    text: '选课系统准时崩溃。蹲守一小时终于进入系统。\n\n你的选择将决定这学期的命运——',
+    choices: [
+      { text: '📚 全选硬核课：高数、大物、C语言', hint: '心理-12（压力山大）', next: 's1_midterm_hard', effect: { mental: -12 } },
+      { text: '⚖️ 难易搭配，合理安排', hint: '心理-5', next: 's1_midterm_balanced', effect: { mental: -5 } },
+      { text: '🎨 多选通识水课', hint: '心理+5, 但GPA上限低', next: 's1_midterm_easy', effect: { mental: 5 } },
+    ],
+  },
+
+  s1_midterm_hard: {
+    icon: '😰', title: '期中考试周',
+    text: '三门硬课同时期中考试。连续一周泡图书馆，每天只睡5小时。\n咖啡已经不够用了，手在发抖……',
+    choices: [
+      { text: '🌙 通宵复习！拼了！', hint: '体力-20, GPA+0.3, 心理-12', next: 's1_end', effect: { health: -20, gpa: 0.3, mental: -12 } },
+      { text: '😴 适可而止，保证睡眠', hint: '体力-5, GPA+0.1', next: 's1_end', effect: { health: -5, gpa: 0.1 } },
+      { text: '🆘 组队互助复习', hint: '社交+8, GPA+0.1, 体力-10', next: 's1_end', effect: { social: 8, gpa: 0.1, health: -10 } },
+    ],
+  },
+  s1_midterm_balanced: {
+    icon: '📝', title: '期中考试周',
+    text: '均衡的课表让你有喘息空间。期中考来了，你觉得准备得还行。',
+    choices: [
+      { text: '📚 图书馆冲刺一周', hint: 'GPA+0.2, 体力-10', next: 's1_end', effect: { gpa: 0.2, health: -10 } },
+      { text: '🔫 室友说来两把CS放松一下', hint: '心理+8, GPA-0.2, 社交+5', next: 's1_cs_discover', effect: { mental: 8, gpa: -0.2, social: 5 } },
+      { text: '👥 找学长要往年试卷', hint: '社交+5, GPA+0.1', next: 's1_end', effect: { social: 5, gpa: 0.1 } },
+    ],
+  },
+  s1_cs_discover: {
+    icon: '🔫', title: '初识CS',
+    text: '室友拉你打了一把CS。你选了AK47，第一局就在Dust2被闪光弹晃瞎后惨死。\n\n"别急，多玩几把就好了。"\n\n于是"几把"变成了通宵。当你关掉游戏时，窗外已经天亮了。\n\n但不得不承认——Rush B的快乐是真实的。',
+    choices: [
+      { text: '🎯 这游戏有意思，以后继续玩', hint: '获得flag: CS玩家', next: 's1_end', effect: { flags: { csPlayer: true } } },
+      { text: '😱 不行不行，太上瘾了，卸载！', hint: '心理-3（但是真的卸了吗？）', next: 's1_end', effect: { mental: -3 } },
+    ],
+  },
+  s1_midterm_easy: {
+    icon: '😊', title: '期中考试周',
+    text: '通识课考试轻松，你有大把时间。\n但身边同学都在拼命学习，你开始焦虑了……',
+    choices: [
+      { text: '😤 我也要卷！去图书馆', hint: '心理-12, GPA+0.1, 体力-5', next: 's1_end', effect: { mental: -12, gpa: 0.1, health: -5 } },
+      { text: '🏃 趁空闲锻炼身体', hint: '体力+8, 心理+3', next: 's1_end', effect: { health: 8, mental: 3 } },
+      { text: '🎭 参加话剧社演出', hint: '社交+8, 心理+5, GPA-0.2', next: 's1_end', effect: { social: 8, mental: 5, gpa: -0.2 } },
+    ],
+  },
+
+  s1_end: {
+    icon: '❄️', title: '第一学期结束',
+    text: () => {
+      let t = '期末考试结束了。在思源门前看着冬日夕阳，感慨万千。\n第一个学期比想象中过得快太多了。\n\n寒假怎么过？';
+      if (state.flags.csPlayer) t += '\n\n（室友群里已经在约寒假CS排位了……）';
+      return t;
+    },
+    choices: [
+      { text: '🏠 回家休息陪父母', hint: '体力+10, 心理+8', next: 's2_intro', effect: { health: 10, mental: 8 }, semester: 2 },
+      { text: '📖 留校预习下学期', hint: 'GPA+0.1, 体力-8', next: 's2_intro', effect: { gpa: 0.1, health: -8 }, semester: 2 },
+      { text: '🔫 寒假和室友组队冲CS天梯', hint: '心理+12, 社交+10, 体力-15, GPA-0.1', next: 's1_cs_winter', effect: { mental: 12, social: 10, health: -15, gpa: -0.1, flags: { csPlayer: true } }, semester: 2 },
+    ],
+  },
+  s1_cs_winter: {
+    icon: '🏆', title: '寒假CS集训',
+    text: '整个寒假，你和室友们组了一支五人队。\n\n从白银打到了黄金，你的AK压枪越来越稳，甩狙也开始有了手感。\nDust2的每个点位你都烂熟于心，Mirage的中路烟你闭着眼都能丢。\n\n室友说："咱这水平，要不要报名校赛？"\n\n你的黑眼圈又重了一圈，但心情前所未有的好。',
+    choices: [{ text: '继续 →', next: 's2_intro', effect: {} }],
+  },
+
+  // ========== 大一·春 ==========
+  s2_intro: {
+    icon: '🌸', title: '大一·春季学期',
+    text: () => {
+      let t = '春天的交大樱花盛开，南洋通道变成粉色隧道。\n你适应了大学节奏，但挑战也在升级……';
+      if (state.flags.csPlayer) t += '\n\n你听说学校电竞社正在招募CS战队成员，校赛就在下个月。';
+      return t;
+    },
+    choices: [
+      { text: '🏆 报名数学建模竞赛', hint: 'GPA+0.1, 心理-12, 体力-8', next: 's2_event', effect: { gpa: 0.1, mental: -12, health: -8 } },
+      { text: '🎵 加入学生乐队', hint: '社交+12, 心理+8, GPA-0.1', next: 's2_event', effect: { social: 12, mental: 8, gpa: -0.1 } },
+      { text: '🔫 报名校CS电竞赛', hint: '社交+10, 心理+10, 体力-12, GPA-0.2', next: 's2_cs_tournament', effect: { social: 10, mental: 10, health: -12, gpa: -0.2, flags: { csPlayer: true, csTournament: true } } },
+      { text: '❤️ 有人向你表白了……', hint: '???', next: 's2_romance', effect: {} },
+    ],
+  },
+  s2_cs_tournament: {
+    icon: '🎮', title: '校园CS联赛',
+    text: () => {
+      let t = '你和队友报名了交大校园CS联赛。\n\n小组赛你们一路碾压，你的AWP狙击让对手闻风丧胆。\n半决赛在Inferno上打满30回合，加时赛你一个1v3残局翻盘，全场沸腾！\n\n';
+      if (Math.random() < 0.5) {
+        t += '决赛遗憾输给了电院的队伍，获得亚军。\n对面的指挥太强了，你们的战术被完全读透。\n\n但这段经历让你在校园里小有名气。';
+        return t;
+      }
+      t += '决赛Dust2，对面ECO局你们却被对手一把Deagle打崩了……\n但最后一张图Mirage，你用AK47交出了30杀的表演，成功捧杯！\n\n"交大CS冠军"——你没想过这会成为你的标签。';
+      return t;
+    },
+    choices: [
+      { text: '🏆 太爽了，继续打更高级别比赛', hint: '社交+5, 心理+5, GPA-0.1, 体力-5', next: 's2_event', effect: { social: 5, mental: 5, gpa: -0.1, health: -5, flags: { csCompetitive: true } } },
+      { text: '📚 见好就收，回归学业', hint: 'GPA+0.1, 心理-5', next: 's2_event', effect: { gpa: 0.1, mental: -5 } },
+    ],
+  },
+  s2_romance: {
+    icon: '💕', title: '校园恋情',
+    text: () => {
+      if (state.flags.militaryCrush) return '军训时那个偷偷看你的人，居然和你选了同一门通识课！\n\n课后TA鼓起勇气要了你的微信。\n聊了一个月后，在樱花树下，TA红着脸说："我喜欢你。"';
+      return '图书馆偶遇了好几次的那个人，终于向你表白了。\nTA 的眼神真挚而紧张。\n\n你的心跳加速了……';
+    },
+    choices: [
+      { text: '💑 答应！在一起！', hint: '心理+15, 社交+8, 体力-8, GPA-0.1', next: 's2_romance_start', effect: { mental: 15, social: 8, health: -8, gpa: -0.1, flags: { inRelationship: true, seriousRelation: true } } },
+      { text: '😏 暧昧一下就好，不想被束缚', hint: '心理+8, 社交+5', next: 's2_fwb', effect: { mental: 8, social: 5, flags: { situationship: true } } },
+      { text: '🙏 拒绝，现在想专注学业', hint: '心理-10, GPA+0.1', next: 's2_event', effect: { mental: -10, gpa: 0.1 } },
+    ],
+  },
+  s2_romance_start: {
+    icon: '🌸', title: '恋爱的季节',
+    text: '你们在一起了。\n\n一起去食堂吃饭，一起在图书馆自习，一起在南洋通道散步看樱花。\n周末去徐家汇看电影，晚上在宿舍楼下依依不舍地道别。\n\nTA给你带了早餐，你帮TA占了图书馆的座。\n\n世界突然变得很温柔。\n但你也发现——学习的时间确实变少了。',
+    choices: [{ text: '继续 →', next: 's2_event', effect: {} }],
+  },
+  s2_fwb: {
+    icon: '🌙', title: '暧昧不清',
+    text: '你们保持着一种微妙的关系。\n\n偶尔一起吃饭，偶尔深夜聊天到凌晨，偶尔约出来喝酒后在外面开房。\n\n你们都没有捅破那层窗户纸。\nTA问你："我们算什么？"\n你说："顺其自然吧。"\n\n方便的时候是甜蜜，不方便的时候是自由。\n但有时候深夜醒来，枕边没有人，你会有一瞬间的空虚。',
+    choices: [
+      { text: '🤷 维持现状挺好的', hint: '心理+3', next: 's2_event', effect: { mental: 3, flags: { situationship: true } } },
+      { text: '💕 认真谈吧，给TA一个交代', hint: '心理+10, 社交+5, GPA-0.1', next: 's2_event', effect: { mental: 10, social: 5, gpa: -0.1, flags: { inRelationship: true, seriousRelation: true, situationship: false } } },
+    ],
+  },
+
+  s2_event: {
+    icon: '🌊', title: '学期过半',
+    text: '五月了，天气炎热。体测逼近。\n\n某天深夜，室友突然情绪崩溃了……',
+    choices: [
+      { text: '🤗 陪室友彻夜长谈', hint: '社交+10, 体力-15, 心理-5', next: 's2_final', effect: { social: 10, health: -15, mental: -5, flags: { helpedRoommate: true } } },
+      { text: '📞 建议TA去心理咨询', hint: '社交+3, 心理+3', next: 's2_final', effect: { social: 3, mental: 3 } },
+      { text: '😬 假装没看见', hint: '社交-12, 心理-8', next: 's2_final', effect: { social: -12, mental: -8 } },
+    ],
+  },
+  s2_final: {
+    icon: '🔥', title: '期末季',
+    text: '大一最后的期末考。下学期专业课难度要上台阶了……\n听说有人已经挂科退学了。',
+    choices: [
+      { text: '📚 全力备考', hint: 'GPA+0.2, 体力-15, 心理-10', next: 's3_intro', effect: { gpa: 0.2, health: -15, mental: -10 }, semester: 3 },
+      { text: '⚖️ 重点突破', hint: 'GPA+0.1, 心理-3', next: 's3_intro', effect: { gpa: 0.1, mental: -3 }, semester: 3 },
+      { text: '🏖️ 随缘吧', hint: 'GPA-0.2, 心理+10, 体力+5', next: 's3_intro', effect: { gpa: -0.2, mental: 10, health: 5 }, semester: 3 },
+    ],
+  },
+
+  // ========== 大二·秋 ==========
+  s3_intro: {
+    icon: '⚡', title: '大二·秋季学期',
+    text: '专业课轰炸开始了。数据结构、电路原理、概率统计……\n课程难度直线飙升，身边开始有人挂科。\n\n焦虑弥漫在空气中。',
+    choices: [
+      { text: '🔬 加入教授实验室', hint: 'GPA+0.1, 社交+5, 体力-12, 心理-8', next: 's3_lab', effect: { gpa: 0.1, social: 5, health: -12, mental: -8, flags: { inLab: true } } },
+      { text: '🏅 竞选学生会', hint: '社交+15, 体力-12, GPA-0.2', next: 's3_mid', effect: { social: 15, health: -12, gpa: -0.2, flags: { studentGov: true } } },
+      { text: '💻 ACM/ICPC训练', hint: 'GPA+0.1, 心理-15, 体力-12', next: 's3_mid', effect: { gpa: 0.1, mental: -15, health: -12, flags: { acm: true } } },
+      { text: '🎯 专注课内', hint: 'GPA+0.2, 社交-5', next: 's3_mid', effect: { gpa: 0.2, social: -5 } },
+    ],
+  },
+  s3_lab: {
+    icon: '🔬', title: '实验室生活',
+    text: '你加入了课题组。每周三次实验，学习各种设备。\n师兄师姐们都在拼命发论文，压力传导到你身上。\n导师说："下周组会，你来汇报。"',
+    choices: [{ text: '（深呼吸）继续 →', next: 's3_mid', effect: { mental: -5 } }],
+  },
+
+  s3_mid: {
+    icon: '🌧️', title: '深夜的图书馆',
+    text: () => {
+      let t = '图书馆即将关门。路过东川路地铁站，烧烤摊的烟火气让你驻足。\n\n手机震动——好朋友说 TA 准备退学了。\n同时，你发现自己有一门课已经在挂科边缘……';
+      if (state.flags.csPlayer) t += '\n\nCS队友发来消息："今晚上分吗？打完这把就睡。"';
+      return t;
+    },
+    choices: [
+      { text: '🏃 去找朋友聊聊', hint: '社交+8, 心理-12, 体力-8', next: 's3_end', effect: { social: 8, mental: -12, health: -8 } },
+      { text: '📱 微信了解情况', hint: '社交+3, 心理-5', next: 's3_end', effect: { social: 3, mental: -5 } },
+      { text: '📚 先管好自己的成绩', hint: 'GPA+0.1, 社交-8, 心理-8', next: 's3_end', effect: { gpa: 0.1, social: -8, mental: -8 } },
+      { text: '🔫 不想了，开一把CS逃避现实', hint: '心理+5, 体力-10, GPA-0.2, 社交+3', next: 's3_cs_escape', effect: { mental: 5, health: -10, gpa: -0.2, social: 3 } },
+    ],
+  },
+  s3_cs_escape: {
+    icon: '💀', title: 'Rush B, Don\'t Stop',
+    text: '"打完这把就睡"——经典谎言。\n\n赢了要再来一把乘胜追击，输了要再来一把扳回来。\n你在Dust2的A大道上反复横跳，在Inferno的香蕉道上进退两难。\n\n就像你的人生。\n\n打到凌晨四点，你的段位上了，但明天的课肯定起不来了。\n手机里朋友的消息还没回……',
+    choices: [
+      { text: '😴 关机睡觉，明天再说', next: 's3_end', effect: {} },
+      { text: '📱 回复朋友消息后再睡', hint: '社交+5, 体力-5', next: 's3_end', effect: { social: 5, health: -5 } },
+    ],
+  },
+  s3_end: {
+    icon: '🍁', title: '秋去冬来',
+    text: () => {
+      let t = '大二上学期结束。你发现自己能看懂学术论文了，但代价是什么？\n\n身边有人拿到了大厂实习，有人发了顶会论文，也有人退学回家了。';
+      if (state.flags.situationship) t += '\n\n那个暧昧对象最近发了条朋友圈，和别人搂在一起。你假装没看见。';
+      t += '\n\n寒假决定：';
+      return t;
+    },
+    choices: [
+      { text: '📝 申请转专业', hint: '心理-12, GPA-0.3', next: 's4_intro', effect: { mental: -12, gpa: -0.3 }, semester: 4 },
+      { text: '🔬 寒假留校科研', hint: 'GPA+0.2, 体力-15, 心理-8', next: 's4_intro', effect: { gpa: 0.2, health: -15, mental: -8 }, semester: 4 },
+      { text: '📱 下载了探探/Tinder，寒假太无聊了', hint: '社交+10, 心理+5, 体力-8', next: 's3_dating_app', effect: { social: 10, mental: 5, health: -8, flags: { datingApp: true } }, semester: 4 },
+    ],
+  },
+  s3_dating_app: {
+    icon: '📱', title: '左滑右滑',
+    text: '你下载了交友软件。\n\n简介写的是"SJTU / 大二 / 随缘"。\n照片选了那张在思源湖边拍的，看起来很文艺。\n\n一周内你收到了几十个like。\n你开始和几个人聊天，有华师大的，有复旦的，还有同校不同院的。\n\n滑到凌晨两点已经成了习惯。\n每一次match都带来一点多巴胺，但关掉手机后又是空虚。',
+    choices: [
+      { text: '🍷 约一个看起来不错的出来见面', hint: '社交+8, 心理+5, 体力-8', next: 's3_date_meetup', effect: { social: 8, mental: 5, health: -8 } },
+      { text: '😐 聊了几天就没劲了，卸载', hint: '心理-5', next: 's4_intro', effect: { mental: -5 } },
+    ],
+  },
+  s3_date_meetup: {
+    icon: '🍻', title: '第一次线下见面',
+    text: '你们约在了淮海路的一家酒吧。\n\n对方比照片好看一点。聊得也还行。\n几杯酒下肚，氛围越来越暧昧。\n\n"要不……去我那边坐坐？"\n\n你的心跳快了几拍。',
+    choices: [
+      { text: '😏 走，去看看', hint: '心理+10, 体力-12, 社交+5', next: 's3_hookup', effect: { mental: 10, health: -12, social: 5, flags: { hookup: true } } },
+      { text: '🙂 今天太晚了，下次吧', hint: '心理+3', next: 's4_intro', effect: { mental: 3 } },
+      { text: '❤️ 我觉得你人挺好的，但我想认真了解你', hint: '社交+8, 心理+5', next: 's3_date_serious', effect: { social: 8, mental: 5 } },
+    ],
+  },
+  s3_hookup: {
+    icon: '🌃', title: '那一夜',
+    text: '出租车穿过灯火通明的上海夜晚。\n\n那一夜发生了你预料中的事情。\n\n第二天早上醒来，阳光从窗帘缝隙里漏进来。\n你看着身边还在熟睡的人，有一种奇怪的感觉——\n\n不是后悔，但也说不上满足。\n\n你轻手轻脚地穿好衣服。手机上有三条未读消息，两个DDL提醒。\n\n回到宿舍，室友问你昨晚去哪了。\n你笑了笑，没说话。',
+    choices: [
+      { text: '📱 之后还有联系，偶尔约', hint: '社交+5, 体力-5, 心理+3', next: 's4_intro', effect: { social: 5, health: -5, mental: 3, flags: { casualDating: true } } },
+      { text: '🚪 之后没再联系了', hint: '心理-5', next: 's4_intro', effect: { mental: -5 } },
+    ],
+  },
+  s3_date_serious: {
+    icon: '💕', title: '认真的开始',
+    text: '你决定认真了解这个人。\n\n你们开始频繁约会。从网红餐厅到弄堂小馆，从外滩夜景到朱家角古镇。\nTA不是交大的，但你们聊得来。\n\n半个月后，你们确认了关系。\n室友说："网恋奔现还成了，牛啊。"',
+    choices: [{ text: '继续 →', next: 's4_intro', effect: { flags: { inRelationship: true, appRelation: true } } }],
+  },
+
+  // ========== 大二·春 ==========
+  s4_intro: {
+    icon: '🌺', title: '大二·春季学期',
+    text: '同学之间的差距开始拉大。\n有人发了论文，有人还在挣扎求过。\n有人已经想好了未来，有人还在迷茫。\n\n你呢？',
+    choices: [
+      { text: '💡 尝试创业', hint: '社交+8, GPA-0.3, 心理+3, 体力-10', next: 's4_mid', effect: { social: 8, gpa: -0.3, mental: 3, health: -10, flags: { startup: true } } },
+      { text: '📊 目标保研，全力冲GPA', hint: 'GPA+0.3, 体力-15, 心理-15', next: 's4_mid', effect: { gpa: 0.3, health: -15, mental: -15, flags: { aimPostgrad: true } } },
+      { text: '🌍 准备出国，考托福GRE', hint: 'GPA+0.1, 体力-12, 心理-10', next: 's4_mid', effect: { gpa: 0.1, health: -12, mental: -10, flags: { aimAbroad: true } } },
+      { text: '🔫 全职打CS，梦想成为职业选手', hint: '心理+15, 社交+10, GPA-0.5, 体力-8', next: 's4_cs_pro', effect: { mental: 15, social: 10, gpa: -0.5, health: -8, flags: { csPlayer: true, csPro: true } } },
+    ],
+  },
+  s4_cs_pro: {
+    icon: '🎮', title: '电竞梦',
+    text: '你开始每天训练8小时以上。Aim训练、战术研究、录像回放……\n\n你的水平确实在飞速提升。FaceIt天梯上你已经打到了Level 9。\n有人在论坛上说你的甩狙有simple的影子。\n\n但现实是——\n上课基本不去了，辅导员连续给你打了三个电话。\n你的GPA正在自由落体。\n\n你在CS里是God，在学业上是Bot。',
+    choices: [
+      { text: '🔫 继续追梦，报名CUPC大学生联赛', hint: '心理+8, 社交+8, GPA-0.3, 体力-10', next: 's4_cs_cupc', effect: { mental: 8, social: 8, gpa: -0.3, health: -10 } },
+      { text: '📚 悬崖勒马，回归学业', hint: 'GPA+0.2, 心理-15（戒断反应）', next: 's4_mid', effect: { gpa: 0.2, mental: -15 } },
+      { text: '⚖️ 试着两边都兼顾', hint: '体力-15, 心理-8', next: 's4_mid', effect: { health: -15, mental: -8 } },
+    ],
+  },
+  s4_cs_cupc: {
+    icon: '🏟️', title: 'CUPC大学生CS联赛',
+    text: () => {
+      let t = '你带队参加了全国大学生CS联赛。\n\n小组赛势如破竹，你的名字开始出现在电竞论坛上。\n"交大有个狙神，不知道是谁。"\n\n';
+      if (state.gpa < 2.0) {
+        t += '但就在八强赛前一天，辅导员找到了你。\n"你的GPA已经不到2.0了。再这样下去，下学期可能会被学业警告。"\n\n你站在训练室门口，手里握着鼠标，心里握着未来。';
+      } else {
+        t += '八强赛你们在Nuke上演了一出惊天逆转，从3-12追到16-14！\n你最后一个回合的1v2残局让所有人站了起来。\n\n最终你们获得了全国第四名。有战队经理开始关注你了……';
+      }
+      return t;
+    },
+    choices: [
+      { text: '🎮 和战队经理聊聊，万一能打职业呢', hint: '心理+10, 社交+10, GPA-0.2', next: 's4_mid', effect: { mental: 10, social: 10, gpa: -0.2, flags: { csContact: true } } },
+      { text: '📚 回来了，学业不能再拖了', hint: 'GPA+0.1, 心理-10', next: 's4_mid', effect: { gpa: 0.1, mental: -10 } },
+    ],
+  },
+  s4_mid: {
+    icon: '⏰', title: '凌晨两点的宿舍',
+    text: () => {
+      let t = '你躺在床上翻来覆去睡不着。\n\n';
+      if (state.flags.inRelationship) t += '恋人最近越来越冷淡，你们已经一周没说话了。\n你翻了翻TA的朋友圈，发现有个你不认识的人在每条下面点赞评论……\n';
+      if (state.flags.casualDating) t += '手机里有三个人在等你回消息。你一个都不想回。\n';
+      if (state.gpa < 2.5) t += '辅导员找你谈话了，说你的成绩已经亮红灯。\n';
+      if (state.health < 40) t += '身体频繁发出警告，上楼梯都会喘。\n';
+      t += '\n手机屏幕亮了——室友在群里发了一条深夜emo。\n你也想发，但打了一行字又删掉了。';
+      return t;
+    },
+    choices: () => {
+      const c = [
+        { text: '💪 明天开始改变', hint: '心理+5, 但什么都没变', next: 's4_end', effect: { mental: 5 } },
+        { text: '📞 给家人打电话', hint: '心理+10, 社交+3', next: 's4_end', effect: { mental: 10, social: 3 } },
+        { text: '🏥 预约心理咨询', hint: '心理+15', next: 's4_end', effect: { mental: 15 } },
+        { text: '🔫 打CS到天亮，只有开枪的时候脑子才能放空', hint: '心理+5, 体力-15, GPA-0.1', next: 's4_cs_night', effect: { mental: 5, health: -15, gpa: -0.1, flags: { csPlayer: true } } },
+      ];
+      if (!state.flags.inRelationship && !state.flags.casualDating) {
+        c.push({ text: '📱 夜深人静，打开了探探', hint: '社交+5, 心理+3, 体力-5', next: 's4_late_swipe', effect: { social: 5, mental: 3, health: -5 } });
+      }
+      if (state.flags.casualDating) {
+        c.push({ text: '📱 约了个人出来"散散心"', hint: '心理+8, 体力-10, 社交+3', next: 's4_booty_call', effect: { mental: 8, health: -10, social: 3 } });
+      }
+      return c;
+    },
+  },
+  s4_late_swipe: {
+    icon: '📱', title: '深夜滑屏',
+    text: '凌晨两点打开交友软件的人，都是什么心态呢？\n\n你知道答案——和你一样，睡不着，想找个人说说话。\n\n你match了一个人。头像是背影照，简介写着"失眠选手"。\n你发了句："你也睡不着？"\n\n聊了两个小时。从学业聊到人生，从星座聊到家庭。\n\nTA说："感觉和你聊天很舒服。"\n你说："我也是。"\n\n然后你们加了微信。\n第二天醒来，你看着聊天记录，想起了那句话——\n\n深夜的心动，白天还算不算数？',
+    choices: [
+      { text: '☀️ 约出来见个面吧', hint: '社交+8, 心理+5', next: 's4_end', effect: { social: 8, mental: 5, flags: { datingApp: true } } },
+      { text: '🙃 算了，深夜的冲动而已', hint: '心理-3', next: 's4_end', effect: { mental: -3 } },
+    ],
+  },
+  s4_booty_call: {
+    icon: '🌃', title: '深夜的出租车',
+    text: '你给那个"偶尔约"的人发了条消息。\n对方秒回："来。"\n\n出租车在半夜的上海飞驰。\n你看着窗外的霓虹灯，想着自己到底在干什么。\n\n三个小时后，你坐上回学校的出租车。\n身体上的空虚被填满了，心里的空虚还在。\n\n你发了条朋友圈"今晚的月亮好圆"，仅自己可见。',
+    choices: [
+      { text: '😔 这样下去不行', hint: '心理-5', next: 's4_end', effect: { mental: -5, flags: { regretCasual: true } } },
+      { text: '🤷 至少今晚不孤单', hint: '心理+3', next: 's4_end', effect: { mental: 3 } },
+    ],
+  },
+  s4_cs_night: {
+    icon: '🌃', title: '深夜的Dust2',
+    text: '凌晨三点，整个宿舍楼都安静了，只有你的键盘鼠标还在响。\n\n你在Dust2上反复练习中门狙击。\n一枪，又一枪。每次击杀都带来短暂的多巴胺。\n\n"The bomb has been planted."\n\n这一刻你什么都不用想。不用想GPA，不用想未来，不用想那些无法回复的消息。\n\n只需要——瞄准，射击。\n\n直到窗外的天开始变亮。\n你关掉游戏，看了一眼战绩：42杀15死。\n\n如果人生也能像CS一样，死了还能下一局重来就好了。',
+    choices: [
+      { text: '😔 叹了口气，爬上床', next: 's4_end', effect: {} },
+    ],
+  },
+  s4_end: {
+    icon: '☀️', title: '大二结束',
+    text: '大学过了一半。\n回想这两年，有收获有遗憾有成长有迷茫。\n\n暑假怎么安排？',
+    choices: [
+      { text: '🏢 去大厂实习', hint: '社交+8, 体力-15, 心理-8', next: 's5_intro', effect: { social: 8, health: -15, mental: -8, flags: { internship: true } }, semester: 5 },
+      { text: '📚 暑假科研/竞赛', hint: 'GPA+0.2, 体力-12, 心理-5', next: 's5_intro', effect: { gpa: 0.2, health: -12, mental: -5 }, semester: 5 },
+      { text: '🏖️ 放假休息', hint: '体力+12, 心理+10', next: 's5_intro', effect: { health: 12, mental: 10 }, semester: 5 },
+    ],
+  },
+
+  // ========== 大三·秋 ==========
+  s5_intro: {
+    icon: '🔥', title: '大三·秋季学期',
+    text: '大三了——公认最艰难的一年。\n专业核心课密集轰炸。保研的在卷绩点，出国的在考GT，就业的在找实习。\n\n焦虑达到了顶峰。每个人都在和时间赛跑。',
+    choices: [
+      { text: '📚 咬牙冲刺专业课', hint: 'GPA+0.2, 体力-18, 心理-15', next: 's5_crisis', effect: { gpa: 0.2, health: -18, mental: -15 } },
+      { text: '🧘 保持节奏，压力管理', hint: 'GPA+0.1, 心理+5', next: 's5_crisis', effect: { gpa: 0.1, mental: 5 } },
+      { text: '🤝 组学习互助组', hint: 'GPA+0.1, 社交+8, 心理+3, 体力-5', next: 's5_crisis', effect: { gpa: 0.1, social: 8, mental: 3, health: -5 } },
+    ],
+  },
+  s5_crisis: {
+    icon: '😰', title: '至暗时刻',
+    text: () => {
+      let t = '深秋的晚上，你在宿舍阳台吹着冷风。\n\n';
+      if (state.flags.inRelationship) t += '💔 恋人提出了分手。TA说你最近太忙了，两个人越来越远……\n你翻到TA的朋友圈，已经和那个"点赞的人"在一起了。\n\n';
+      if (state.flags.casualDating) t += '💔 你的"固定约会对象"突然告诉你：TA要和别人正式在一起了。\n你说不上难过，但胸口闷闷的。\n\n';
+      if (state.flags.inLab) t += '⚠️ 导师的项目deadline临近，实验数据还没出来。导师在群里@了你三次……\n\n';
+      if (state.gpa < 3.0) t += '📉 你的排名已经跌出了保研线，需要另谋出路……\n\n';
+      t += '一切似乎在同时崩塌。\n你感觉自己快撑不住了。';
+      return t;
+    },
+    choices: () => {
+      const c = [
+        { text: '💪 扛住，一件件解决', hint: '心理-15, 体力-10, GPA+0.1', next: 's5_end', effect: { mental: -15, health: -10, gpa: 0.1 } },
+        { text: '📞 给父母打电话', hint: '心理+12', next: 's5_end', effect: { mental: 12 } },
+        { text: '🏥 去心理咨询中心', hint: '心理+18, 社交+3', next: 's5_end', effect: { mental: 18, social: 3 } },
+        { text: '🍺 约朋友喝酒', hint: '心理+8, 社交+5, 体力-10, GPA-0.1', next: 's5_end', effect: { mental: 8, social: 5, health: -10, gpa: -0.1 } },
+        { text: '🔫 打开CS，在虚拟世界里当一回英雄', hint: '心理+10, 体力-8, GPA-0.1', next: 's5_cs_clutch', effect: { mental: 10, health: -8, gpa: -0.1, flags: { csPlayer: true } } },
+      ];
+      if (state.flags.inRelationship || state.flags.casualDating) {
+        c.push({ text: '📱 分手/断联后疯狂刷交友软件', hint: '社交+8, 心理+3, 体力-8', next: 's5_rebound', effect: { social: 8, mental: 3, health: -8, flags: { inRelationship: false, casualDating: false, datingApp: true } } });
+      }
+      return c;
+    },
+  },
+  s5_rebound: {
+    icon: '💊', title: '用新欢忘旧爱',
+    text: '一周内你约了四个人出来。\n\n周一咖啡，周三晚餐，周五酒吧，周末……\n\n你像是在流水线上一样高效地社交、暧昧、告别。\n每个人都觉得你健谈又有趣，但没有人知道你在笑容背后藏着什么。\n\n其中一个人说："你好像在逃避什么。"\n\n你愣了一下，笑着说："没有啊。"\n\n那天回去的路上，你哭了。\n\n不是因为前任，是因为你发现——\n你在用别人的体温，来治疗自己的孤独。\n而这剂药，不管用。',
+    choices: [
+      { text: '😢 也许该好好面对自己了', hint: '心理+5', next: 's5_end', effect: { mental: 5, flags: { regretCasual: true } } },
+      { text: '🤷 至少比一个人待着强', hint: '社交+3', next: 's5_end', effect: { social: 3 } },
+    ],
+  },
+  s5_cs_clutch: {
+    icon: '🔫', title: '1v4 Clutch',
+    text: '你打开CS，solo排位。\n\n这一局你状态出奇地好。\n最后一个回合，比分14-15，你的队友全倒了，场上只剩你一个人。\n1v4。\n\n你深吸一口气——\n第一个，闪光拉出来，爆头。\n第二个，从连接绕来，转身甩狙，击杀。\n第三个，A小道peek，你的AK精准三连击。\n最后一个……你听到了脚步声……从背后。\n\n你跳起来，180度转身，一枪爆头。\n\nACE。\n\n队友在语音里疯狂尖叫。\n\n你摘下耳机，发现自己在笑。\n虽然什么问题都没解决，但此刻你觉得——至少在某个世界里，你是最强的。',
+    choices: [
+      { text: '😌 带着好心情去面对明天', next: 's5_end', effect: { mental: 5 } },
+    ],
+  },
+  s5_end: {
+    icon: '🌟', title: '保研/申请季',
+    text: () => {
+      if (state.gpa >= 3.5) return '凭借优秀的GPA，你获得了保研资格！\n但面试压力巨大，导师选择让你纠结……';
+      else if (state.gpa >= 2.8) return 'GPA不够保研。考研、出国、就业——你必须快速做出选择。\n时间不等人。';
+      else return '⚠️ 绩点危险了。如果继续下降，毕业都会成问题。\n你必须在最后时刻奋起直追。';
+    },
+    choices: [{ text: '全力以赴 →', next: 's6_intro', effect: {}, semester: 6 }],
+  },
+
+  // ========== 大三·春 ==========
+  s6_intro: {
+    icon: '🌈', title: '大三·春季学期',
+    text: '课程设计、毕业实习、各种DDL堆在一起。\n\n但你已经是"老交大人"了。该懂的潜规则，该认识的人，你都有了。\n问题是——够不够？',
+    choices: [
+      { text: '🏢 互联网大厂实习', hint: '社交+8, 体力-18, GPA-0.2, 心理-5', next: 's6_mid', effect: { social: 8, health: -18, gpa: -0.2, mental: -5, flags: { bigCompany: true } } },
+      { text: '🔬 全身心投入科研', hint: 'GPA+0.3, 体力-12, 心理-8', next: 's6_mid', effect: { gpa: 0.3, health: -12, mental: -8 } },
+      { text: '💘 在学长/学姐毕业前大胆表白', hint: '???', next: 's6_senior_crush', effect: {} },
+    ],
+  },
+  s6_senior_crush: {
+    icon: '💌', title: '毕业季的告白',
+    text: '你一直暗恋的那个大四学长/学姐马上要毕业了。\n\n在TA的毕业晚会上，你喝了点酒壮胆，把TA拉到了教学楼后面。\n\n"我喜欢你。从大一认识你的时候就喜欢你了。"\n\n空气安静了三秒。',
+    choices: () => {
+      if (Math.random() < 0.4) {
+        return [
+          { text: '💕 TA笑了：其实我也是', hint: '心理+20, 社交+10', next: 's6_senior_yes', effect: { mental: 20, social: 10, flags: { inRelationship: true, seniorLove: true } } },
+        ];
+      }
+      return [
+        { text: '😢 TA说：你很好，但我要去北京/出国了……', hint: '心理-15, 社交+5', next: 's6_senior_no', effect: { mental: -15, social: 5 } },
+      ];
+    },
+  },
+  s6_senior_yes: {
+    icon: '🌅', title: '夕阳下的拥抱',
+    text: '"其实我也是。只是一直没敢说。"\n\nTA拉着你的手，在毕业墙前拍了一张合照。\n\n虽然TA马上要离开上海了，异地恋充满不确定。\n但此刻，夕阳温柔，晚风刚好，你什么都不想管了。\n\n"等我毕业，我去找你。"',
+    choices: [{ text: '继续 →', next: 's6_mid', effect: {} }],
+  },
+  s6_senior_no: {
+    icon: '🚶', title: '得不到的永远在骚动',
+    text: '"你是个很好的人……但我下个月就走了。异地的话，对你不公平。"\n\nTA拍了拍你的头，转身走了。\n\n你站在原地，看着TA的背影消失在路灯下。\n\n回宿舍的路上你买了一罐啤酒，坐在思源湖边喝完了。\n\n湖面上映着星星。你心想——暗恋三年，终于有个结果了。\n虽然不是想要的那个。',
+    choices: [{ text: '继续 →', next: 's6_mid', effect: {} }],
+  },
+  s6_mid: {
+    icon: '⏰', title: '凌晨四点的交大',
+    text: '你见过凌晨四点的交大吗？\n图书馆门口路灯还亮着，远处有人在弹吉他。\n\n大学时光真的不多了。你突然很想哭。\n\n你最珍惜什么？',
+    choices: [
+      { text: '👨‍🎓 还能学习的时光', hint: 'GPA+0.1, 心理+3, 体力-5', next: 's6_end', effect: { gpa: 0.1, mental: 3, health: -5 } },
+      { text: '👫 身边的人', hint: '社交+10, 心理+8', next: 's6_end', effect: { social: 10, mental: 8 } },
+      { text: '🌅 这份自由和可能性', hint: '心理+10', next: 's6_end', effect: { mental: 10 } },
+    ],
+  },
+  s6_end: {
+    icon: '🎆', title: '大三结束',
+    text: '三年白驹过隙。\n你从懵懂新生成长为一个有方向的人——或者，一个更加迷茫的人。\n\n最后一年了。',
+    choices: [{ text: '进入大四 →', next: 's7_intro', effect: {}, semester: 7 }],
+  },
+
+  // ========== 大四·秋 ==========
+  s7_intro: {
+    icon: '🎓', title: '大四·秋季学期',
+    text: '毕业论文开题了。导师给了你一个有挑战性的题目。\n秋招如火如荼。\n\n这是决定未来的关键时刻。时间和精力都不够用了。',
+    choices: [
+      { text: '📝 全力写毕业论文', hint: 'GPA+0.2, 体力-12, 心理-5', next: 's7_mid', effect: { gpa: 0.2, health: -12, mental: -5 } },
+      { text: '💼 疯狂冲秋招', hint: '社交+8, 体力-18, 心理-12, GPA-0.1', next: 's7_mid', effect: { social: 8, health: -18, mental: -12, gpa: -0.1, flags: { jobHunting: true } } },
+      { text: '📖 准备考研', hint: 'GPA+0.1, 心理-15, 体力-15', next: 's7_mid', effect: { gpa: 0.1, mental: -15, health: -15, flags: { gradSchool: true } } },
+    ],
+  },
+  s7_mid: {
+    icon: '🍂', title: '深秋抉择',
+    text: () => {
+      if (state.flags.jobHunting) return '你收到了几个offer，但都不是最心仪的公司。\n要接受"还行"的offer，还是继续等？\n\n每天都在焦虑和期待中度过。';
+      if (state.flags.gradSchool) return '考研倒计时60天。压力巨大。\n自习室里坐满了同样焦虑的人。\n有人崩溃哭了出来。';
+      return '毕业论文终于有了突破！\n但导师说："还不够，再改改。"\n你已经改了第七版了……';
+    },
+    choices: () => {
+      const c = [
+        { text: '坚持到底', hint: '体力-10, 心理-5, GPA+0.1', next: 's7_end', effect: { health: -10, mental: -5, gpa: 0.1 } },
+        { text: '给自己喘息空间', hint: '体力+5, 心理+5, GPA-0.1', next: 's7_end', effect: { health: 5, mental: 5, gpa: -0.1 } },
+      ];
+      if (state.flags.csContact) {
+        c.push({ text: '🔫 认真考虑职业电竞的邀请', hint: '心理+15, 社交+10, GPA-0.3', next: 's7_cs_career', effect: { mental: 15, social: 10, gpa: -0.3 } });
+      }
+      return c;
+    },
+  },
+  s7_cs_career: {
+    icon: '🎮', title: '电竞十字路口',
+    text: '你收到了一支半职业战队的试训邀请。\n\n队伍虽然不是顶级，但确实有打二级联赛的实力。\n如果顺利，也许能冲击Major预选赛。\n\n但这意味着——你可能要放弃正常毕业的机会。\n\n你坐在网吧里，一手握着鼠标，一手拿着手机看辅导员发的学业警告。\n\n你想起了第一次在宿舍玩CS的那个夜晚。\n那时候只是觉得好玩。什么时候变成了人生抉择？',
+    choices: [
+      { text: '🔫 去试训！人生能有几次追梦的机会', hint: '心理+20, GPA-0.3, 体力-10', next: 's7_end', effect: { mental: 20, gpa: -0.3, health: -10, flags: { csCareer: true } } },
+      { text: '📚 梦想照进现实，还是先把书念完', hint: 'GPA+0.2, 心理-10', next: 's7_end', effect: { gpa: 0.2, mental: -10 } },
+    ],
+  },
+  s7_end: {
+    icon: '🎊', title: '新年钟声',
+    text: '新年钟声敲响。你站在宿舍楼顶，看着远处外滩的烟花。\n\n还有一个学期就毕业了。\n四年就这么要过去了。\n\n不管结果如何，你还在这里。',
+    choices: [{ text: '最后一学期 →', next: 's8_intro', effect: {}, semester: 8 }],
+  },
+
+  // ========== 大四·春 ==========
+  s8_intro: {
+    icon: '🌸', title: '大四·春——最后的学期',
+    text: () => {
+      let t = '樱花又开了。这是你在交大看到的第四次樱花。\n\n毕业论文答辩在即。四年的积淀，让你有了底气——或者，让你更加忐忑。';
+      if (state.flags.inRelationship) t += '\n\n你和恋人走在樱花大道上。TA问你："毕业以后，我们怎么办？"';
+      if (state.flags.seniorLove) t += '\n\n异地恋一年了。TA发来消息："我在北京租好房了，有你的位置。"';
+      return t;
+    },
+    choices: () => {
+      const c = [
+        { text: '📝 全力准备答辩', hint: 'GPA+0.2, 体力-8, 心理-3', next: 's8_defense', effect: { gpa: 0.2, health: -8, mental: -3 } },
+        { text: '📸 和朋友拍毕业照', hint: '社交+8, 心理+12', next: 's8_defense', effect: { social: 8, mental: 12 } },
+        { text: '🍻 毕业旅行', hint: '心理+15, 体力-8, GPA-0.1', next: 's8_defense', effect: { mental: 15, health: -8, gpa: -0.1 } },
+      ];
+      if (state.flags.inRelationship && !state.flags.seniorLove) {
+        c.push({ text: '💍 和恋人认真谈谈未来', hint: '心理+10, 社交+5', next: 's8_future_talk', effect: { mental: 10, social: 5 } });
+      }
+      return c;
+    },
+  },
+  s8_future_talk: {
+    icon: '💑', title: '关于我们的未来',
+    text: '你们坐在思源湖边，天边是粉紫色的晚霞。\n\n"毕业以后……你想怎么样？"\n\n你看着TA的眼睛。四年前，你们还是陌生人。\n现在TA是你在这座城市最重要的人。\n\n你们聊了很多——关于去哪个城市，关于异地还是同城，关于租房还是回家。\n\n没有标准答案。但至少，你们在认真面对。',
+    choices: [
+      { text: '💕 不管去哪，在一起就好', hint: '心理+10, 社交+5', next: 's8_defense', effect: { mental: 10, social: 5, flags: { togetherAfterGrad: true } } },
+      { text: '🙁 也许……毕业就是终点', hint: '心理-10, 社交-5', next: 's8_breakup', effect: { mental: -10, social: -5 } },
+    ],
+  },
+  s8_breakup: {
+    icon: '💔', title: '毕业季分手',
+    text: '你们都知道这一天迟早会来。\n\n不是不爱了，是现实太复杂。\n一个要去北京，一个要留上海。\n谁也不想让对方为自己牺牲前途。\n\n最后一次拥抱，你们在宿舍楼下站了很久。\n\n"谢谢你这几年。"\n"我也是。"\n\n转身的时候，你没有回头。\n因为你知道一回头，你就会改变主意。\n\n走回宿舍的楼梯上，你终于哭了出来。',
+    choices: [{ text: '💧 擦干眼泪，继续走', next: 's8_defense', effect: { flags: { inRelationship: false, gradBreakup: true } } }],
+  },
+  s8_defense: {
+    icon: '🎤', title: '毕业答辩',
+    text: () => {
+      if (state.gpa >= 3.5) return '你的毕业论文获得答辩委员会一致好评！\n"研究扎实，论述清晰，优秀的本科论文。"\n\n你激动得眼眶湿润了。';
+      if (state.gpa >= 2.5) return '答辩有几个问题让你紧张，但总体回答得不错。\n委员会经过讨论，宣布——你通过了！\n\n你长舒一口气。';
+      if (state.gpa >= 2.0) return '答辩过程很艰难，评委提了尖锐的问题。\n你尽力回答了每一个。\n漫长等待后……勉强通过了。\n你差点瘫在座位上。';
+      return '答辩委员会遗憾地通知你：论文未达到毕业要求。\n你需要延期……\n\n走出答辩教室，走廊很长很安静。';
+    },
+    choices: [{ text: '查看结局 →', next: 'ending', effect: {} }],
+  },
+
+  // ========== 属性归零 ==========
+  gameover_health: {
+    icon: '🏥', title: '身体崩溃',
+    text: '长期的熬夜和过劳让你的身体撑不住了。\n你在实验室晕倒，被送进了医院。\n\n医生说你需要休学一年。\n\n这不是终点，只是一个弯路。养好身体，还能重新出发。',
+    isEnding: true, endingType: 'health_fail',
+  },
+  gameover_mental: {
+    icon: '😢', title: '心理危机',
+    text: '持续的压力和焦虑让你陷入严重的心理困境。\n无法集中注意力，每天都很痛苦。\n\n在辅导员和咨询师帮助下，你决定休学。\n\n寻求帮助是勇敢的。你会好起来的。',
+    isEnding: true, endingType: 'mental_fail',
+  },
+  gameover_social: {
+    icon: '🏝️', title: '社交孤岛',
+    text: '你和所有人断开了联系。\n没有朋友，没有学习伙伴，和室友形同陌路。\n\n孤独感让你怀疑一切。你开始旷课，不想出门。\n\n辅导员终于注意到了你……',
+    isEnding: true, endingType: 'social_fail',
+  },
+  gameover_gpa: {
+    icon: '📉', title: '学业警告',
+    text: 'GPA跌到了0。你收到了学校的学业警告通知。\n如果下学期无法提升，将被劝退。\n\n你坐在空荡荡的教室里，看着窗外的梧桐树发呆。\n\n一切还来得及吗？',
+    isEnding: true, endingType: 'gpa_fail',
+  },
+};
+
+// ==================== 结局 ====================
+function calculateEnding() {
+  const { gpa, health, social, mental, flags, playerClass, completedQuests, activeQuests } = state;
+  const total = health + social + mental;
+
+  // 优先检查任务结局（取第一个完成的有结局的任务）
+  for (const id of completedQuests) {
+    const q = QUESTS[id];
+    if (q && q.ending && activeQuests.includes(id)) return q.ending;
+  }
+
+  // 甜蜜毕业结局
+  if (flags.togetherAfterGrad && gpa >= 3.0 && total >= 150) {
+    return { icon: '💑', title: '双向奔赴 · 一起毕业', rank: 'S+',
+      text: '毕业典礼结束后，你和恋人在思源湖边的长椅上坐了很久。\n\n四年前你们还是陌生人。\n四年后，你们手里都拿着学位证书，心里都装着彼此。\n\nTA说："接下来的路，一起走吧。"\n你说："本来就是。"\n\n后来你们去了同一座城市，租了一间小小的公寓。\n冰箱上贴着交大的冰箱贴，书架上放着毕业合照。\n\n这个结局，不比满绩点差。' };
+  }
+  // 毕业分手结局
+  if (flags.gradBreakup && gpa >= 2.0) {
+    return { icon: '🚶', title: '各奔前程', rank: 'A',
+      text: '你拿到了学位证书。\n\n毕业典礼上，你在人群里看到了TA。\n你们目光交汇了一秒，然后都移开了。\n\n有些人陪你走过了最好的四年，但不会出现在之后的人生里。\n这不是遗憾，这是青春的一部分。\n\n多年后的某个深夜，你偶尔会想起思源湖边的夕阳。\n然后微笑着，继续过自己的日子。' };
+  }
+  // CS职业选手结局
+  if (flags.csCareer) {
+    if (mental >= 50 && social >= 40) {
+      return { icon: '🔫', title: '电竞传奇 · 交大CS之光', rank: 'S+',
+        text: '你走上了职业电竞的道路。\n\n虽然学业勉强毕业（或者延期了），但你在赛场上发光发热。\n第一年打二级联赛就帮助队伍升级，你的ID开始出现在各大赛事的击杀榜上。\n\n有人说你疯了，放着交大毕业生不当去打游戏。\n但当你举起奖杯的那一刻，你知道——这就是你的战场。\n\n"GG，WP。"\n\n交大电竞协会把你的照片挂在了活动室的墙上。\n下面写着："梦想不分赛道。"' };
+    } else {
+      return { icon: '😞', title: '未竟的电竞梦', rank: 'B',
+        text: '你去试训了，但职业的残酷超出想象。\n每天14小时高强度训练，队内竞争激烈。\n\n几个月后，你被告知：实力还差一些。\n\n你回到学校，申请了延期毕业。\n虽然梦碎了，但你不后悔尝试。\n\n多年后你在直播CS时，偶尔会想起那段追梦的日子。\n弹幕飘过："主播当年差点打职业的吗？"\n\n你笑了笑，没有回答。' };
+    }
+  }
+  if (gpa >= 3.8 && health >= 60 && social >= 60 && mental >= 60) {
+    return { icon: '🏆', title: '完美毕业 · 人生赢家', rank: 'SSS',
+      text: `作为${CLASSES[playerClass].name}，你以优异成绩毕业，获得"上海市优秀毕业生"称号。\n\nGPA名列前茅，身体健康，朋友遍天下，内心充实平静。\n\n毕业典礼上，你回望四年——每一个选择，都成就了今天的你。\n\n交大，永远是你的家。` };
+  } else if (gpa >= 3.3 && total >= 180) {
+    return { icon: '🎓', title: '优秀毕业生', rank: 'S',
+      text: '你交出了一份优秀的答卷。\n四年有挣扎有迷茫，但你始终没有放弃。\n\n未来的路很长，你已经准备好了。' };
+  } else if (gpa >= 2.8 && total >= 120) {
+    return { icon: '😊', title: '顺利毕业', rank: 'A',
+      text: '虽然不是最优秀的，但你用自己的方式走完了旅程。\n有遗憾也有收获。\n\n最重要的是——你毕业了。' };
+  } else if (gpa >= 2.0) {
+    return { icon: '😓', title: '险险毕业', rank: 'B',
+      text: '最后一个学期险象环生。好几门差点挂科，论文是DDL前一天才完成。\n\n但是——你毕业了！\n这份韧性，比任何成绩都重要。' };
+  } else {
+    return { icon: '📜', title: '延期毕业', rank: 'C',
+      text: '学分不够或GPA未达要求，需要延期一学期。\n\n这不是失败，只是多了一段旅程。\n很多成功的人都走过弯路。你没有放弃。' };
+  }
+}
+
+// ==================== 渲染 ====================
+function renderScene(sceneId) {
+  if (state.gpa <= 0 && sceneId !== 'gameover_gpa') sceneId = 'gameover_gpa';
+  else if (state.health <= 0 && sceneId !== 'gameover_health') sceneId = 'gameover_health';
+  else if (state.mental <= 0 && sceneId !== 'gameover_mental') sceneId = 'gameover_mental';
+  else if (state.social <= 0 && sceneId !== 'gameover_social') sceneId = 'gameover_social';
+
+  state.scene = sceneId;
+  const scene = scenes[sceneId];
+  const card = document.getElementById('mainCard');
+  card.style.animation = 'none'; card.offsetHeight; card.style.animation = 'fadeIn 0.6s ease';
+
+  // 标题页
+  if (sceneId === 'title') {
+    showStatus(false);
+    card.innerHTML = `<div class="title-screen">
+      <div class="scene-icon">${scene.icon}</div>
+      <div class="scene-title">${scene.title}</div>
+      <div class="subtitle">一款关于选择与生存的文字冒险游戏</div>
+      <div class="scene-text">${scene.text.replace(/\n/g,'<br>')}</div>
+      <button class="start-btn" onclick="renderScene('classSelect')">📖 选择你的身份</button>
+    </div>`;
+    return;
+  }
+
+  // 职业选择页
+  if (sceneId === 'classSelect') {
+    showStatus(false);
+    let grid = '<div class="class-grid">';
+    for (const [id, c] of Object.entries(CLASSES)) {
+      grid += `<div class="class-card" onclick="selectClass('${id}')" id="class_${id}">
+        <div class="class-icon">${c.icon}</div>
+        <div class="class-name">${c.name} <span class="difficulty-tag ${c.diffClass}">${c.difficulty}</span></div>
+        <div class="class-desc">${c.desc}</div>
+        <div class="class-stats">GPA ${c.gpa.toFixed(1)} | 体力 ${c.health} | 社交 ${c.social} | 心理 ${c.mental}</div>
+        <div class="class-passive">${c.passive}</div>
+      </div>`;
+    }
+    grid += '</div>';
+    card.innerHTML = `
+      <div class="scene-icon">${scene.icon}</div>
+      <div class="scene-title">${scene.title}</div>
+      <div class="scene-text">${scene.text.replace(/\n/g,'<br>')}</div>
+      ${grid}
+      <button class="start-btn" id="confirmClassBtn" style="opacity:0.3;pointer-events:none;margin-top:20px;" onclick="startGame()">确认选择</button>
+    `;
+    return;
+  }
+
+  // 结局
+  if (sceneId === 'ending') {
+    checkQuests();
+    const e = calculateEnding();
+    showStatus(true);
+    // 生成任务完成列表
+    let questHtml = '';
+    if (state.activeQuests.length > 0) {
+      questHtml += '<div class="quest-ending-list">';
+      questHtml += '<div style="text-align:center;color:var(--dim);font-size:13px;font-weight:700;margin-bottom:8px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">📋 毕业目标达成</div>';
+      state.activeQuests.forEach(id => {
+        const q = QUESTS[id];
+        const done = state.completedQuests.includes(id);
+        questHtml += `<div class="quest-ending-item">
+          <span class="qe-icon">${q.icon}</span>
+          <span style="flex:1">${q.name}</span>
+          <span style="font-weight:700;color:${done ? '#8f8' : '#f88'}">${done ? '✓ 达成' : '✗ 未达成'}</span>
+        </div>`;
+      });
+      questHtml += '</div>';
+    }
+    card.innerHTML = `
+      <div class="ending-badge">${e.icon}</div>
+      <div class="scene-title">${e.title}</div>
+      <div style="text-align:center;color:var(--gold);font-size:28px;font-weight:900;margin:10px 0;">评级：${e.rank}</div>
+      <div class="scene-text">${e.text.replace(/\n/g,'<br>')}</div>
+      <div class="ending-stats">
+        <div><div class="es-val">${state.gpa.toFixed(1)}</div>最终 GPA</div>
+        <div><div class="es-val">${state.health}</div>最终体力</div>
+        <div><div class="es-val">${state.social}</div>最终社交</div>
+        <div><div class="es-val">${state.mental}</div>最终心理</div>
+      </div>
+      ${questHtml}
+      <div style="text-align:center;color:var(--dim);font-size:12px;margin-top:10px;">
+        ${CLASSES[state.playerClass].icon} ${CLASSES[state.playerClass].name} · ${state.semester} 个学期
+      </div>
+      <button class="restart-btn" onclick="location.reload()">🔄 再来一次</button>`;
+    return;
+  }
+
+  // 特殊结局（属性归零）
+  if (scene.isEnding) {
+    showStatus(true);
+    card.innerHTML = `
+      <div class="ending-badge">${scene.icon}</div>
+      <div class="scene-title">${scene.title}</div>
+      <div class="scene-text">${scene.text.replace(/\n/g,'<br>')}</div>
+      <div class="ending-stats">
+        <div><div class="es-val">${state.gpa.toFixed(1)}</div>最终 GPA</div>
+        <div><div class="es-val">${state.health}</div>最终体力</div>
+        <div><div class="es-val">${state.social}</div>最终社交</div>
+        <div><div class="es-val">${state.mental}</div>最终心理</div>
+      </div>
+      <div style="text-align:center;color:var(--dim);font-size:12px;margin-top:10px;">
+        ${CLASSES[state.playerClass].icon} ${CLASSES[state.playerClass].name} · 在第 ${state.semester} 学期倒下
+      </div>
+      <button class="restart-btn" onclick="location.reload()">🔄 再来一次</button>`;
+    return;
+  }
+
+  // 普通场景
+  showStatus(true);
+  const text = typeof scene.text === 'function' ? scene.text() : scene.text;
+  const choiceList = typeof scene.choices === 'function' ? scene.choices() : (scene.choices || []);
+  let choicesHtml = '<div class="choices">';
+  choiceList.forEach((c, i) => {
+    choicesHtml += `<button class="choice-btn" onclick="choose(${i})" style="animation:fadeIn 0.4s ease ${0.1+i*0.1}s both;">
+      <span class="choice-emoji">${(c.text.match(/^\S+/)||[''])[0]}</span>${c.text.replace(/^\S+\s*/,'')}
+      ${c.hint ? `<span class="choice-hint">${c.hint}</span>` : ''}
+    </button>`;
+  });
+  choicesHtml += '</div>';
+  card.innerHTML = `
+    <div class="scene-icon">${scene.icon}</div>
+    <div class="scene-title">${scene.title}</div>
+    <div class="scene-text">${text.replace(/\n/g,'<br>')}</div>
+    ${choicesHtml}`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+let selectedClass = null;
+function selectClass(id) {
+  selectedClass = id;
+  document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('class_' + id).classList.add('selected');
+  const btn = document.getElementById('confirmClassBtn');
+  btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+}
+
+function startGame() {
+  if (!selectedClass) return;
+  const cls = CLASSES[selectedClass];
+  state.playerClass = selectedClass;
+  state.gpa = cls.gpa; state.health = cls.health; state.social = cls.social; state.mental = cls.mental;
+  state.semester = 1; state.flags = {}; state.activeQuests = []; state.completedQuests = [];
+  updateUI();
+  renderScene('s1_intro');
+}
+
+function choose(index) {
+  const scene = scenes[state.scene];
+  const choiceList = typeof scene.choices === 'function' ? scene.choices() : scene.choices;
+  const choice = choiceList[index];
+  applyStat(choice.effect);
+  if (choice.semester) onSemesterChange(choice.semester);
+  // toast
+  const ef = choice.effect;
+  let parts = [];
+  if (ef.gpa > 0) parts.push(`GPA+${ef.gpa}`); if (ef.gpa < 0) parts.push(`GPA${ef.gpa}`);
+  if (ef.health > 0) parts.push(`体力+${ef.health}`); if (ef.health < 0) parts.push(`体力${ef.health}`);
+  if (ef.social > 0) parts.push(`社交+${ef.social}`); if (ef.social < 0) parts.push(`社交${ef.social}`);
+  if (ef.mental > 0) parts.push(`心理+${ef.mental}`); if (ef.mental < 0) parts.push(`心理${ef.mental}`);
+  if (parts.length) {
+    const pos = (ef.gpa > 0 || ef.health > 0 || ef.social > 0 || ef.mental > 0);
+    const neg = (ef.gpa < 0 || ef.health < 0 || ef.social < 0 || ef.mental < 0);
+    showToast(parts.join(' | '), pos && !neg ? 'positive' : 'negative');
+  }
+  setTimeout(() => renderScene(choice.next), 200);
+}
+
+// 星空
+(function(){
+  const c = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div'); s.className = 'star';
+    const sz = Math.random()*2+1;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${Math.random()*3+2}s;`;
+    c.appendChild(s);
+  }
+})();
+
+renderScene('title');
+</script>
+</body>
+</html>

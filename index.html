@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>上海交通大学生存挑战</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<button class="quest-toggle hidden" id="questToggle" onclick="toggleQuestPanel()">📋<span class="quest-count" id="questCount" style="display:none">0</span></button>
+<div class="quest-overlay" id="questOverlay" onclick="toggleQuestPanel()"></div>
+<div class="quest-panel" id="questPanel"></div>
+<div class="game-container">
+  <div class="status-bar hidden" id="statusBar">
+    <div class="stat stat-gpa"><div class="stat-label">📚 GPA</div><div class="stat-value" id="gpaVal">3.0</div><div class="stat-bar-bg"><div class="stat-bar-fill" id="gpaBar" style="width:75%"></div></div></div>
+    <div class="stat stat-health"><div class="stat-label">💪 体力</div><div class="stat-value" id="healthVal">80</div><div class="stat-bar-bg"><div class="stat-bar-fill" id="healthBar" style="width:80%"></div></div></div>
+    <div class="stat stat-mental"><div class="stat-label">🧠 心理</div><div class="stat-value" id="mentalVal">60</div><div class="stat-bar-bg"><div class="stat-bar-fill" id="mentalBar" style="width:60%"></div></div></div>
+    <div class="stat stat-money"><div class="stat-label">💰 金钱</div><div class="stat-value" id="moneyVal">50</div><div class="stat-bar-bg"><div class="stat-bar-fill" id="moneyBar" style="width:50%"></div></div></div>
+  </div>
+  <div class="semester-indicator hidden" id="semesterInd">第一学期</div>
+  <div class="main-card" id="mainCard"></div>
+</div>
+
+<script defer src="js/data/classes.js"></script>
+<script defer src="js/data/random-events.js"></script>
+<script defer src="js/data/quests.js"></script>
+<script defer src="js/engine.js"></script>
+<script defer src="js/quest-panel.js"></script>
+<script defer src="js/endings.js"></script>
+<script defer src="js/data/scenes.js"></script>
+<script defer src="js/data/rare-choices.js"></script>
+<script defer src="js/renderer.js"></script>
+<script defer src="js/stars.js"></script>
+<script defer src="js/main.js"></script>
+</body>
+</html>

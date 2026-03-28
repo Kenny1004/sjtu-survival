@@ -1,0 +1,176 @@
+window.Game = window.Game || {};
+
+Game.QUESTS = {
+  baoyan: {
+    icon: '🎓', name: '保研',
+    desc: '凭借优秀的GPA获得研究生推免资格，继续在交大或其他名校深造。',
+    reward: '结局：保研上岸',
+    unlockSemester: 3,
+    check: (s) => s.gpa >= 3.5 && s.flags.inLab,
+    reqText: (s) => [
+      { label: `GPA ≥ 3.5（当前 ${s.gpa.toFixed(1)}）`, met: s.gpa >= 3.5 },
+      { label: `加入过实验室`, met: !!s.flags.inLab },
+    ],
+    ending: { icon: '🎓', title: '保研上岸 · 学术新星', rank: 'S',
+      text: '你成功获得了研究生推免资格！\n\n导师在邮件里写道："欢迎加入课题组，期待你的表现。"\n\n四年的努力没有白费。当你在研究生录取系统上看到"已录取"三个字时，\n你深吸一口气，给爸妈打了个电话。\n\n"爸，妈，我保研成功了。"\n\n电话那头沉默了两秒，然后你听到了妈妈的哭声。\n\n新的旅程即将开始。这次，你准备好了。' },
+  },
+  kaoyan: {
+    icon: '📖', name: '考研',
+    desc: '通过全国研究生入学考试，用分数证明自己的实力。',
+    reward: '结局：考研成功',
+    unlockSemester: 5,
+    check: (s) => s.gpa >= 2.5 && s.mental >= 40 && s.flags.gradSchool,
+    reqText: (s) => [
+      { label: `GPA ≥ 2.5（当前 ${s.gpa.toFixed(1)}）`, met: s.gpa >= 2.5 },
+      { label: `心理 ≥ 40（当前 ${s.mental}）`, met: s.mental >= 40 },
+      { label: `选择过考研路线`, met: !!s.flags.gradSchool },
+    ],
+    ending: { icon: '📖', title: '考研上岸 · 逆袭之路', rank: 'A+',
+      text: '考研成绩出来的那天，你的手在发抖。\n\n当你看到自己的分数超过国家线60分的时候，\n你在图书馆里捂着嘴，眼泪夺眶而出。\n\n那些凌晨五点半起床占座的日子，\n那些做了三遍数学真题的夜晚，\n那些室友睡着后你还在默背政治的时刻——\n\n全都值了。\n\n你拍了张成绩截图发给了最好的朋友。\n对方回了三个字："牛逼！"' },
+  },
+  chuguo: {
+    icon: '✈️', name: '出国留学',
+    desc: '申请海外名校，去看看更大的世界。需要优秀的GPA和足够的资金支持。',
+    reward: '结局：留学海外',
+    unlockSemester: 4,
+    check: (s) => s.gpa >= 3.2 && s.money >= 30 && s.flags.aimAbroad,
+    reqText: (s) => [
+      { label: `GPA ≥ 3.2（当前 ${s.gpa.toFixed(1)}）`, met: s.gpa >= 3.2 },
+      { label: `金钱 ≥ 30（当前 ${s.money}）`, met: s.money >= 30 },
+      { label: `选择过出国路线`, met: !!s.flags.aimAbroad },
+    ],
+    ending: { icon: '✈️', title: '留学海外 · 星辰大海', rank: 'S',
+      text: '你收到了offer邮件。\n\n"Congratulations! We are pleased to offer you admission to..."\n\n你盯着屏幕看了整整一分钟，确认自己没有眼花。\n\n从托福首考的崩溃，到GRE背单词背到想吐，\n从文书改了十几版的绝望，到面试时紧张到声音发颤——\n\n所有的痛苦，在这一刻都变成了勋章。\n\n你买了一张单程机票。\n窗外是浦东机场的跑道，你即将飞向一个全新的世界。\n\n"交大再见。世界你好。"' },
+  },
+  dachang: {
+    icon: '💼', name: '大厂就业',
+    desc: '拿到互联网大厂的offer，成为年薪百万的打工人（起码先入个职）。',
+    reward: '结局：大厂offer',
+    unlockSemester: 5,
+    check: (s) => s.mental >= 40 && s.money >= 30 && (s.flags.internship || s.flags.bigCompany) && s.flags.jobHunting,
+    reqText: (s) => [
+      { label: `心理 ≥ 40（当前 ${s.mental}）`, met: s.mental >= 40 },
+      { label: `金钱 ≥ 30（当前 ${s.money}）`, met: s.money >= 30 },
+      { label: `有过实习经历`, met: !!(s.flags.internship || s.flags.bigCompany) },
+      { label: `参加过秋招`, met: !!s.flags.jobHunting },
+    ],
+    ending: { icon: '💼', title: '大厂入职 · 互联网新人', rank: 'A+',
+      text: '秋招尾声，你收到了心仪大厂的offer call。\n\nHR在电话里说了薪资待遇，你努力保持冷静，\n但挂了电话后在宿舍蹦了三下。\n\n室友问："多少？"\n你报了个数字。\n宿舍沉默了两秒，然后爆发出一阵尖叫。\n\n"今晚必须搓一顿！"\n\n你看着手里的offer letter，想起了当初在面试间里紧张到手心出汗的自己。\n\n从实习生到正式员工，你终于走出了第一步。\n\n打工人，打工魂。但至少，是大厂的魂。' },
+  },
+  kaogong: {
+    icon: '🏛️', name: '考公上岸',
+    desc: '参加公务员考试，追求稳定的体制内生活。需要扎实的基础和强大的心态。',
+    reward: '结局：公务员上岸',
+    unlockSemester: 6,
+    check: (s) => s.gpa >= 2.5 && s.mental >= 50 && s.health >= 40,
+    reqText: (s) => [
+      { label: `GPA ≥ 2.5（当前 ${s.gpa.toFixed(1)}）`, met: s.gpa >= 2.5 },
+      { label: `心理 ≥ 50（当前 ${s.mental}）`, met: s.mental >= 50 },
+      { label: `体力 ≥ 40（当前 ${s.health}）`, met: s.health >= 40 },
+    ],
+    ending: { icon: '🏛️', title: '上岸成功 · 人民公仆', rank: 'A',
+      text: '公务员考试的成绩出来了——行测78，申论72。\n面试你发挥出色，综合排名第一。\n\n体检、政审、公示……一切顺利。\n\n你终于等到了那封录取通知。\n\n爸妈比你还激动："咱家终于出了个吃公粮的！"\n\n你收拾好行李，准备去一个你从没去过的城市报到。\n窗外是上海的天际线，你深深看了一眼。\n\n"交大四年，值了。"\n\n稳定，是另一种勇敢。' },
+  },
+  chuangye: {
+    icon: '🚀', name: '创业',
+    desc: '带着交大的光环和积累的资源，开始自己的创业之路。',
+    reward: '结局：创业起步',
+    unlockSemester: 4,
+    check: (s) => s.mental >= 50 && s.money >= 40 && s.flags.startup,
+    reqText: (s) => [
+      { label: `心理 ≥ 50（当前 ${s.mental}）`, met: s.mental >= 50 },
+      { label: `金钱 ≥ 40（当前 ${s.money}）`, met: s.money >= 40 },
+      { label: `有过创业经历`, met: !!s.flags.startup },
+    ],
+    ending: { icon: '🚀', title: '创业者 · 从零到一', rank: 'A+',
+      text: '毕业前，你的创业项目拿到了天使轮融资。\n\n投资人说："我投的不是你的项目，是你这个人。"\n\n你和合伙人租了一间小办公室，在张江高科技园区。\n办公桌是宜家最便宜的款，\n但墙上挂着你们在"创青春"比赛时的合照。\n\n那是梦开始的地方。\n\n创业九死一生，前路充满未知。\n但你已经习惯了在不确定中寻找确定。\n\n毕竟——你可是从交大活着毕业的人。' },
+  },
+  // ========== 隐式支线（爱好→职业）==========
+  dianjing: {
+    icon: '🔫', name: 'CS电竞',
+    desc: '从宿舍娱乐到校队比赛，再到职业试训。你的CS天赋，也许能成为事业。',
+    reward: '结局：电竞传奇',
+    unlockSemester: 1,
+    hidden: {
+      revealCheck: function(s) { return (s.flags._csCount || 0) >= 3; },
+      revealText: '你在CS上花的时间越来越多。室友说你该去打比赛了——也许这不只是消遣？',
+    },
+    check: (s) => s.flags.csCareer && s.mental >= 50,
+    reqText: (s) => [
+      { label: `选择电竞道路`, met: !!s.flags.csCareer },
+      { label: `心理 ≥ 50（当前 ${s.mental}）`, met: s.mental >= 50 },
+    ],
+    ending: null, // endings.js 单独处理 csCareer
+  },
+  zuqiu: {
+    icon: '⚽', name: '足球联赛',
+    desc: '从跑步健身到加入院足球队。你在绿茵场上的表现，也许能带队拿下交大杯。',
+    reward: '结局：绿茵传奇',
+    unlockSemester: 1,
+    hidden: {
+      revealCheck: function(s) { return (s.flags._sportCount || 0) >= 3; },
+      revealText: '体育老师注意到你了："你身体素质不错，院足球队正缺人，要不要来？"',
+    },
+    check: (s) => s.health >= 60 && (s.flags._sportCount || 0) >= 5 && s.flags.footballTeam,
+    reqText: (s) => [
+      { label: `体力 ≥ 60（当前 ${s.health}）`, met: s.health >= 60 },
+      { label: `运动投入 ≥ 5（当前 ${s.flags._sportCount || 0}）`, met: (s.flags._sportCount || 0) >= 5 },
+      { label: `加入院足球队`, met: !!s.flags.footballTeam },
+    ],
+    ending: { icon: '⚽', title: '绿茵传奇 · 交大杯冠军', rank: 'A+',
+      text: '交大杯决赛，第88分钟，比分1:1。\n\n角球开出，你高高跃起——头球！破门！\n\n全场沸腾。队友冲过来把你抛向空中。\n院系群炸了，辅导员发了三条朋友圈。\n\n颁奖典礼上，你高举奖杯。\n上面刻着"交大杯冠军"——这四个字，比任何证书都让你骄傲。\n\n四年后回想大学，你第一个想到的不是图书馆，\n是那片绿茵场，和那个夕阳下的进球。\n\n"那一脚，我一辈子都忘不了。"' },
+  },
+  yuedui: {
+    icon: '🎸', name: '大学乐队',
+    desc: '从自己瞎弹到组乐队排练。也许毕业晚会的舞台，就是你的主场。',
+    reward: '结局：摇滚青春',
+    unlockSemester: 1,
+    hidden: {
+      revealCheck: function(s) { return (s.flags._musicCount || 0) >= 2; },
+      revealText: '你对音乐的热爱被注意到了。有人问你："要不要一起组个乐队？"',
+    },
+    check: (s) => (s.flags._musicCount || 0) >= 4 && s.mental >= 50 && s.flags.bandFormed,
+    reqText: (s) => [
+      { label: `音乐投入 ≥ 4（当前 ${s.flags._musicCount || 0}）`, met: (s.flags._musicCount || 0) >= 4 },
+      { label: `心理 ≥ 50（当前 ${s.mental}）`, met: s.mental >= 50 },
+      { label: `组建乐队`, met: !!s.flags.bandFormed },
+    ],
+    ending: { icon: '🎸', title: '摇滚青春 · 毕业晚会之王', rank: 'A+',
+      text: '毕业晚会，你们乐队压轴登场。\n\n当你弹响第一个和弦的时候，台下安静了。\n然后——全场沸腾。\n\n三首歌唱完，台下疯狂喊着"再来一首！"\n手机闪光灯挥舞成一片星海。\n\n你站在舞台上，看着台下那些熟悉的面孔。\n四年前你还不敢在人前唱歌，现在你在千人面前弹吉他。\n\n散场后，有个大一学弟跑过来：\n"学长，我也想学吉他。你能教我吗？"\n\n你笑了。摇滚不死，青春永燃。' },
+  },
+  dinghui: {
+    icon: '📄', name: '顶会论文',
+    desc: '从看不懂论文到自己动手写。本科生发顶会，交大之光。',
+    reward: '结局：学术新星',
+    unlockSemester: 1,
+    hidden: {
+      revealCheck: function(s) { return s.flags.inLab && (s.flags._researchCount || 0) >= 2; },
+      revealText: '导师找你谈话："你最近实验做得不错，要不要试试写一篇论文投顶会？"',
+    },
+    check: (s) => s.gpa >= 3.2 && (s.flags._researchCount || 0) >= 4 && s.flags.paperWriting,
+    reqText: (s) => [
+      { label: `GPA ≥ 3.2（当前 ${s.gpa.toFixed(1)}）`, met: s.gpa >= 3.2 },
+      { label: `科研投入 ≥ 4（当前 ${s.flags._researchCount || 0}）`, met: (s.flags._researchCount || 0) >= 4 },
+      { label: `参与论文写作`, met: !!s.flags.paperWriting },
+    ],
+    ending: { icon: '📄', title: '学术新星 · 顶会一作', rank: 'S',
+      text: '凌晨三点，你刷新了OpenReview页面。\n\n"Accept (Oral Presentation)"\n\n你盯着屏幕看了十秒，然后从椅子上跳了起来。\n\n导师发来消息："恭喜！本科生发顶会，交大之光。"\n\n从加入实验室时看不懂论文，到自己的名字出现在顶会一作列表上。\n这中间是无数个泡在实验室的深夜，无数次实验失败推倒重来。\n\n答辩的时候，评委说：\n"这是我见过最优秀的本科论文之一。"\n\n你的名字，将永远留在这个领域的文献里。' },
+  },
+  ganqing: {
+    icon: '💕', name: '感情线',
+    desc: '不只是暧昧和心动，而是真正的陪伴。四年的感情，能走到最后吗？',
+    reward: '结局：双向奔赴',
+    unlockSemester: 1,
+    hidden: {
+      revealCheck: function(s) { return (s.flags._romanceCount || 0) >= 2; },
+      revealText: '你开始在意某个人的消息了。手机亮了会下意识地看一眼……',
+    },
+    check: (s) => s.flags.inRelationship && s.flags.seriousRelation && s.mental >= 40,
+    reqText: (s) => [
+      { label: `正在恋爱中`, met: !!s.flags.inRelationship },
+      { label: `认真的感情`, met: !!s.flags.seriousRelation },
+      { label: `心理 ≥ 40（当前 ${s.mental}）`, met: s.mental >= 40 },
+    ],
+    ending: null, // 走已有的甜蜜毕业结局 (togetherAfterGrad)
+  },
+};
