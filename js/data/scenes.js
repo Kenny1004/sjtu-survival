@@ -16,7 +16,7 @@ Game.scenes = {
   // ========== 大一·秋 ==========
   s1_intro: {
     icon: '🍂', title: '开学报到',
-    text: '九月的上海依然炎热。你拖着行李箱来到闵行校区，看着广阔的校园，心中充满期待与不安。\n\n室友来自五湖四海，宿舍楼下的食堂排着长队。军训即将开始……',
+    text: '九月的上海闷热得像一块湿毛巾。行李箱轮子碾过滚烫的柏油路，发出咕噜咕噜的声响。\n\n闵行校区大得像一座小城。你看着手机导航，在陌生的路牌前拐错了两次弯。\n宿舍楼下排着长队，空气里飘着食堂的油烟味。你深吸一口气——这就是接下来四年的味道了。',
     choices: [
       { text: '💪 认真参加军训，锻炼意志', hint: '体力+5, 心理+6', next: 's1_military_hard', effect: { health: 5, mental: 6 } },
       { text: '🤒 想办法开病假条划水', hint: '体力+5, 心理-8', next: 's1_military_skip', effect: { health: 5, mental: -8 } },
@@ -85,13 +85,14 @@ Game.scenes = {
       { text: '😤 我也要卷！去图书馆', hint: '心理-12, GPA+0.1, 体力-5', next: 's1_end', effect: { mental: -12, gpa: 0.1, health: -5 } },
       { text: '🏃 趁空闲锻炼身体', hint: '体力+8, 心理+3', next: 's1_end', effect: { health: 8, mental: 3, flags: { _sportCount: 1 } } },
       { text: '🎭 参加话剧社演出', hint: '心理+8, GPA-0.05, 金钱-3', next: 's1_end', effect: { mental: 8, gpa: -0.05, money: -3 } },
+      { text: '🎸 加入吉他社学弹琴', hint: '心理+8, 金钱-3', next: 's1_end', effect: { mental: 8, money: -3, flags: { _musicCount: 1, guitar: true } } },
     ],
   },
 
   s1_end: {
     icon: '❄️', title: '第一学期结束',
     text: function() {
-      var t = '期末考试结束了。在思源门前看着冬日夕阳，感慨万千。\n第一个学期比想象中过得快太多了。';
+      var t = '走出考场的时候，思源门前的银杏已经落光了。\n你记得开学那天它们还是绿的。\n\n路灯亮得很早，你站在原地愣了一会儿，说不上来在想什么。\n第一个学期就这样结束了。好像什么都没发生，又好像什么都不一样了。';
       if (Game.state.flags.csPlayer) t += '\n\n（室友群里已经在约寒假CS排位了……）';
       return t;
     },
@@ -177,7 +178,7 @@ Game.scenes = {
   // ========== 大二·秋 ==========
   s3_intro: {
     icon: '⚡', title: '大二·秋季学期',
-    text: '专业课轰炸开始了。数据结构、电路原理、概率统计……\n课程难度直线飙升，身边开始有人挂科。\n\n焦虑弥漫在空气中。',
+    text: '专业课的PPT翻到第三页你就开始看不懂了。\n课程难度像是换了个台阶——不是一级一级上，是直接跳了一层楼。\n\n包玉刚图书馆的座位开始抢不到了。有人早上七点去占座，桌上贴着"考研占座请勿移动"。\n身边开始有人挂科的消息传来，走廊里安静了许多。',
     next: 's3_mid',
     groups: [
       { label: '🎯 学期主线', exclusive: true, picks: [
@@ -192,7 +193,7 @@ Game.scenes = {
         { text: '🔫 打CS放松', effect: { mental: 5, gpa: -0.05, flags: { csPlayer: true, _csCount: 1 } } },
         { text: '📖 广泛阅读', effect: { mental: 3, gpa: 0.1 } },
         { text: '⚽ 加入院足球队', effect: { health: 8, mental: 5, flags: { _sportCount: 1, footballTeam: true } }, condition: function(s) { return (s.flags._sportCount || 0) >= 2; } },
-        { text: '🎵 乐队排练', effect: { mental: 8, gpa: -0.05, flags: { _musicCount: 1, bandPractice: true } }, condition: function(s) { return (s.flags._musicCount || 0) >= 1; } },
+        { text: '🎵 乐队排练', effect: { mental: 8, gpa: -0.05, flags: { _musicCount: 1, bandPractice: true, bandFormed: true } }, condition: function(s) { return (s.flags._musicCount || 0) >= 1; } },
       ]},
     ],
   },
@@ -222,7 +223,7 @@ Game.scenes = {
   s3_end: {
     icon: '🍁', title: '秋去冬来',
     text: function() {
-      var t = '大二上学期结束。你发现自己能看懂学术论文了，但代价是什么？\n\n身边有人拿到了大厂实习，有人发了顶会论文，也有人退学回家了。';
+      var t = '东川路地铁站的晚风变冷了。你裹紧衣服，突然意识到自己已经能看懂学术论文了。\n\n但你想不起来上次给家里打电话是什么时候。\n\n有人的朋友圈开始晒offer，有人悄悄退了所有的群。你没有评论，只是默默划过。';
       if (Game.state.flags.situationship) t += '\n\n那个暧昧对象最近发了条朋友圈，和别人搂在一起。你假装没看见。';
       return t;
     },
@@ -347,14 +348,14 @@ Game.scenes = {
   },
   s4_end: {
     icon: '☀️', title: '大二结束',
-    text: '大学过了一半。\n回想这两年，有收获有遗憾有成长有迷茫。\n\n窗外蝉声阵阵，暑假来了。',
+    text: '收拾行李的时候，你在抽屉最里面翻到了大一军训的合照。\n照片里的人你已经认不全了。\n\n窗外蝉声很响。大学过了一半，没有人提醒你，你自己数的。',
     choices: [{ text: '进入暑假 →', next: 'v4_summer', effect: {} }],
   },
 
   // ========== 大三·秋 ==========
   s5_intro: {
     icon: '🔥', title: '大三·秋季学期',
-    text: '大三了——公认最艰难的一年。\n专业核心课密集轰炸。保研的在卷绩点，出国的在考GT，就业的在找实习。\n\n焦虑达到了顶峰。每个人都在和时间赛跑。',
+    text: '图书馆早上七点开门，七点一刻就没有空座了。\n走廊里所有人都戴着耳机，没有人说话。你注意到大家走路都变快了。\n\n大三了。没有人再讨论周末去哪里玩。',
     next: 's5_crisis',
     groups: [
       { label: '📚 学期策略', exclusive: true, picks: [
@@ -427,7 +428,7 @@ Game.scenes = {
   // ========== 大三·春 ==========
   s6_intro: {
     icon: '🌈', title: '大三·春季学期',
-    text: '课程设计、毕业实习、各种DDL堆在一起。\n\n但你已经是"老交大人"了。该懂的潜规则，该认识的人，你都有了。\n问题是——够不够？',
+    text: '你已经是"老交大人"了。\n知道哪个食堂窗口11:45排队最短，知道哪栋教学楼的Wi-Fi信号最好，知道东川路烧烤摊几点出摊。\n\n但这些都不能回答那个越来越近的问题：毕业之后，你要去哪？',
     next: 's6_mid',
     groups: [
       { label: '🎯 学期重心', exclusive: true, picks: [
@@ -440,7 +441,7 @@ Game.scenes = {
         { text: '💘 在学长/学姐毕业前大胆表白', effect: {}, redirect: 's6_senior_crush', condition: function(s) { return !s.flags.inRelationship; } },
         { text: '🏃 坚持运动', effect: { health: 8, mental: 3, flags: { _sportCount: 1 } } },
         { text: '🔫 打CS解压', effect: { mental: 5, gpa: -0.05, flags: { _csCount: 1 } }, condition: function(s) { return s.flags.csPlayer; } },
-        { text: '🎵 乐队排练', effect: { mental: 8, gpa: -0.05, flags: { _musicCount: 1 } }, condition: function(s) { return (s.flags._musicCount || 0) >= 1; } },
+        { text: '🎵 乐队排练', effect: { mental: 8, gpa: -0.05, flags: { _musicCount: 1, bandFormed: true } }, condition: function(s) { return (s.flags._musicCount || 0) >= 1; } },
         { text: '📄 继续跟导师做科研', effect: { gpa: 0.1, health: -5, mental: -3, flags: { _researchCount: 1 } }, condition: function(s) { return s.flags.inLab; } },
         { text: '💼 投简历找暑期实习', effect: { mental: -3, money: 3, flags: { internship: true } } },
         { text: '🍺 和朋友们好好聚聚', effect: { mental: 8, money: -3 } },
@@ -483,14 +484,14 @@ Game.scenes = {
   },
   s6_end: {
     icon: '🎆', title: '大三结束',
-    text: '三年白驹过隙。\n你从懵懂新生成长为一个有方向的人——或者，一个更加迷茫的人。\n\n最后一年了。',
+    text: '你发现自己走在校园里已经不用看导航了。\n哪条路有树荫，哪个厕所人少，哪个食堂窗口的阿姨打饭多——你的脚替你记住了一切。\n\n三年就是这样过去的。不是一瞬间，是一步一步。\n\n最后一年了。',
     choices: [{ text: '进入大四 →', next: 'v6_summer', effect: {} }],
   },
 
   // ========== 大四·秋 ==========
   s7_intro: {
     icon: '🎓', title: '大四·秋季学期',
-    text: '毕业论文开题了。导师给了你一个有挑战性的题目。\n秋招如火如荼。\n\n这是决定未来的关键时刻。时间和精力都不够用了。',
+    text: '毕业论文开题了。导师晚上十一点发来邮件，你十一点零一分就回了。\n你不确定这算敬业还是焦虑。\n\n校园里多了很多穿正装的人——去面试的。你路过他们的时候会不自觉地加快脚步，好像慢下来就会被甩在后面。',
     choices: [
       { text: '📝 全力写毕业论文', hint: 'GPA+0.2, 体力-12, 心理-5', next: 's7_mid', effect: { gpa: 0.2, health: -12, mental: -5, flags: { _researchCount: 1 } } },
       { text: '💼 疯狂冲秋招', hint: '心理-7, 体力-18, GPA-0.1, 金钱-3', next: 's7_mid', effect: { mental: -7, health: -18, gpa: -0.1, money: -3, flags: { jobHunting: true } } },
@@ -525,7 +526,7 @@ Game.scenes = {
   },
   s7_end: {
     icon: '🎊', title: '新年钟声',
-    text: '新年钟声敲响。你站在宿舍楼顶，看着远处外滩的烟花。\n\n还有一个学期就毕业了。\n四年就这么要过去了。\n\n不管结果如何，你还在这里。',
+    text: '新年钟声敲响。你站在宿舍楼顶，远处外滩的烟花无声地炸开，过了一两秒，声音才传过来。\n\n风很大。你把手缩进袖子里。\n\n还有一个学期就毕业了。你看着那些迟到的声响，想——四年大概也是这样，等你听见回声的时候，人已经走远了。',
     choices: [{ text: '最后一学期 →', next: 'v7_winter', effect: {} }],
   },
 
@@ -578,7 +579,7 @@ Game.scenes = {
   v1_winter: {
     icon: '🧧', title: '大一·寒假',
     text: function() {
-      var t = '回到家，爸妈在车站等你。桌上摆满了你爱吃的菜。\n高中同学群里约着春节聚会。\n\n一个月的假期，想做的事情太多了——';
+      var t = '出站的时候一眼就看到了爸妈。妈妈说你瘦了，其实你胖了三斤。\n\n回到家，房间比记忆中小了一点。书桌上还摊着高考前的草稿纸，像是另一个人的遗物。\n桌上摆满了你爱吃的菜。你吃了很多，什么都没说。';
       if (Game.state.flags.csPlayer) t += '\n\n室友群："初三开始冲天梯？在线等！"';
       return t;
     },
@@ -600,7 +601,7 @@ Game.scenes = {
   },
   v2_summer: {
     icon: '☀️', title: '大一·暑假',
-    text: '第一个大学暑假，两个月完整的自由时间。\n\n朋友圈里有人在旅行，有人在实习，有人在家打游戏。\n你的暑假计划是——',
+    text: '第一个大学暑假。两个月，完全属于你自己。\n\n下午两点，你躺在床上盯着天花板。窗外的蝉叫得理直气壮。\n朋友圈划了三遍，有人在旅行，有人在实习。你把手机扣在胸口，觉得自由是件让人心慌的事。',
     next: 's3_intro', semester: 3,
     groups: [
       { label: '📍 暑假去哪', exclusive: true, picks: [
@@ -621,7 +622,7 @@ Game.scenes = {
   v3_winter: {
     icon: '🎄', title: '大二·寒假',
     text: function() {
-      var t = '大二的寒假，回家的感觉不一样了。\n\n爸妈开始问"有对象了吗""以后想干嘛"。\n你说"还在想"，然后逃回了房间。';
+      var t = '到家才发现，妈妈把你的书架清了一半，腾出来放杂物了。\n你没说什么，但心里有个地方被轻轻碰了一下。\n\n饭桌上爸妈开始问"有对象了吗""以后想干嘛"。\n你说"还在想"，然后端着碗逃回了房间。';
       if (Game.state.flags.inRelationship) t += '\n\n恋人发来消息："寒假好无聊，想你了。"';
       if (Game.state.flags.situationship) t += '\n\n那个暧昧的人发来"新年快乐"，你纠结了半天怎么回。';
       return t;
@@ -637,6 +638,7 @@ Game.scenes = {
         { text: '📱 天天有局，社交密集期', effect: { mental: 8, money: -5 }, loc: 'home' },
         { text: '💤 每天睡到自然醒', effect: { health: 10, mental: 3 } },
         { text: '📚 预习下学期', effect: { gpa: 0.1, mental: -3 } },
+        { text: '🎵 寒假苦练乐器', effect: { mental: 5, flags: { _musicCount: 1 } }, condition: function(s) { return (s.flags._musicCount || 0) >= 1; } },
         { text: '📱 下载探探，寒假太无聊了', effect: { mental: 5, money: -2, flags: { datingApp: true } }, redirect: 's3_dating_app', condition: function(s) { return !s.flags.inRelationship && !s.flags.casualDating; } },
         { text: '🔬 寒假留校做实验', effect: { gpa: 0.1, health: -8, mental: -5, flags: { _researchCount: 1 } }, loc: 'campus', condition: function(s) { return s.flags.inLab; } },
       ]},
@@ -644,7 +646,7 @@ Game.scenes = {
   },
   v4_summer: {
     icon: '🌴', title: '大二·暑假',
-    text: '大学过半了。这可能是最后一个"没有压力"的长假。\n\n大三开学就要面对保研、考研、就业的抉择。\n趁现在——',
+    text: '校园空了，蝉鸣回荡在没有人的教学楼之间。\n\n这大概是最后一个不用想太多的暑假了。开学之后，每一个选择都会关上另一扇门。\n\n但那是以后的事。现在，夏天还很长。',
     next: 's5_intro', semester: 5,
     groups: [
       { label: '📍 暑假主线', exclusive: true, picks: [
@@ -664,7 +666,7 @@ Game.scenes = {
   v5_winter: {
     icon: '🌨️', title: '大三·寒假',
     text: function() {
-      var t = '这个寒假没人能真正放松。\n\n保研的在等结果，考研的已经开始复习，出国的在刷标化。\n朋友圈全是"上岸""offer""录取"的消息。';
+      var t = '每天早上醒来第一件事是看手机，也不知道在等什么消息。\n\n以前发表情包的群，现在只聊考研倒计时。你想看个电影放松一下，点开又退出来，心里总觉得有什么事没做。\n\n这个寒假，安静得让人不安。';
       if (Game.state.gpa >= 3.5) t += '\n\n你的GPA不错，但能否最终保研还是未知数。';
       else if (Game.state.gpa < 2.5) t += '\n\n看着自己的GPA，你有点慌了。';
       return t;
@@ -687,10 +689,10 @@ Game.scenes = {
   v6_summer: {
     icon: '🏝️', title: '大三·暑假',
     text: function() {
-      var t = '这是你最后一个暑假了。下次放假……就是毕业。\n\n';
-      if (Game.state.flags.bigCompany || Game.state.flags.internship) t += '秋招提前批已经开始了。你的简历准备好了吗？';
-      else if (Game.state.flags.gradSchool) t += '考研倒计时开始。暑假是最后的大块复习时间。';
-      else t += '有人在实习，有人在备考，有人在享受最后的自由。';
+      var t = '路过校门口，看到一群新生在拍录取通知书的照片。\n你愣了一下——三年前你也站在同一个地方。\n\n这是最后一个暑假了。等下次放长假的时候，你已经不是学生了。\n\n';
+      if (Game.state.flags.bigCompany || Game.state.flags.internship) t += '秋招提前批已经开始了，手机里全是招聘信息推送。';
+      else if (Game.state.flags.gradSchool) t += '考研倒计时开始了。暑假是最后的大块复习时间。';
+      else t += '有人在实习，有人在备考。你还没想好，但时间不会等你想好。';
       return t;
     },
     next: 's7_intro', semester: 7,
@@ -711,10 +713,10 @@ Game.scenes = {
   v7_winter: {
     icon: '🎑', title: '大四·寒假',
     text: function() {
-      var t = '这可能是你最后一次以"学生"身份回家过年。\n\n爸妈看你的眼神多了几分不舍。年夜饭上被问了无数遍"毕业去哪"。';
+      var t = '最后一次以"学生"身份回家过年。\n\n年夜饭上爸爸给你倒了杯酒，你愣了一下——以前那个位置放的是橙汁。\n妈妈往你行李箱里塞了很多东西，你没有拿出来。';
       if (Game.state.flags.csCareer) t += '\n\n战队的试训邀请还在邮箱里。你反复看了好几遍。';
       else if (Game.state.flags.jobHunting) t += '\n\n手里的offer让你安心了些，但真的要当打工人了。';
-      else t += '\n\n论文、答辩、未来……焦虑和期待交织。';
+      else t += '\n\n论文、答辩、还有一切悬而未决的事。窗外的鞭炮声很远。';
       return t;
     },
     next: 's8_intro', semester: 8,
