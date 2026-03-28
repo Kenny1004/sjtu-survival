@@ -85,7 +85,29 @@ Game.applyChoiceEffect = function(effect) {
     actual.money = effect.money;
   }
 
-  if (effect.flags) Game.mergeFlags(Game.state.flags, effect.flags);
+  // 合并flags，但对隐式支线进度做门控：
+  // 放弃任务后，对应的进度flag不再累积
+  if (effect.flags) {
+    var flags = effect.flags;
+    if (Game.PROGRESS_QUEST_MAP) {
+      var filtered = {};
+      for (var key in flags) {
+        var qid = Game.PROGRESS_QUEST_MAP[key];
+        if (qid) {
+          // 进度flag：仅在任务未浮现（还在积攒中）或已接取时累积
+          var revealed = Game.state.revealedQuests.indexOf(qid) !== -1;
+          var active = Game.state.activeQuests.indexOf(qid) !== -1;
+          if (!revealed || active) {
+            filtered[key] = flags[key];
+          }
+        } else {
+          filtered[key] = flags[key];
+        }
+      }
+      flags = filtered;
+    }
+    Game.mergeFlags(Game.state.flags, flags);
+  }
   Game.updateUI();
   // 检查隐式任务是否该浮现
   if (Game.checkHiddenQuests) Game.checkHiddenQuests();
@@ -192,6 +214,17 @@ Game.formatRange = function(effect) {
     }
   });
   return parts.join(', ');
+};
+
+// 格式化debuff文本用于UI显示
+Game.formatDebuff = function(debuff) {
+  if (!debuff) return '';
+  var parts = [];
+  var labels = { gpa: 'GPA', health: '体力', mental: '心理', money: '金钱' };
+  ['gpa', 'health', 'mental', 'money'].forEach(function(k) {
+    if (debuff[k]) parts.push(labels[k] + debuff[k]);
+  });
+  return parts.join(' ');
 };
 
 // 动量方向箭头

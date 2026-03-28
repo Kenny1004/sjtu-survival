@@ -70,6 +70,7 @@ Game.renderQuestPanel = function() {
         '<div class="quest-desc">' + q.desc + '</div>' +
         '<div class="quest-reqs">' + reqs.map(function(r) { return '<span class="' + (r.met ? 'req-met' : 'req-unmet') + '">' + (r.met ? '✓' : '✗') + ' ' + r.label + '</span>'; }).join('') + '</div>' +
         '<div class="quest-reward">🏆 ' + q.reward + '</div>' +
+        (q.debuff ? '<div style="font-size:11px;color:#f88;margin-top:4px;">⚠️ 每学期消耗：' + Game.formatDebuff(q.debuff) + '（' + q.debuffText + '）</div>' : '') +
         '<div style="margin-top:8px;"><button class="quest-btn abandon" onclick="abandonQuest(\'' + id + '\')">放弃此目标</button></div>' +
       '</div>';
     });
@@ -89,6 +90,7 @@ Game.renderQuestPanel = function() {
         '<div class="quest-desc">' + q.desc + '</div>' +
         '<div class="quest-reqs">' + reqs.map(function(r) { return '<span class="' + (r.met ? 'req-met' : 'req-unmet') + '">' + (r.met ? '✓' : '✗') + ' ' + r.label + '</span>'; }).join('') + '</div>' +
         '<div class="quest-reward">🏆 ' + q.reward + '</div>' +
+        (q.debuff ? '<div style="font-size:11px;color:#f88;margin-top:4px;">⚠️ 接取后每学期消耗：' + Game.formatDebuff(q.debuff) + '</div>' : '') +
         '<div style="margin-top:8px;"><button class="quest-btn" onclick="acceptQuest(\'' + id + '\')">接取此目标</button></div>' +
       '</div>';
     });
@@ -170,6 +172,11 @@ Game.onSemesterChange = function(newSem) {
   // 职业被动
   var cls = Game.CLASSES[Game.state.playerClass];
   if (cls && cls.passiveFn) cls.passiveFn(Game.state);
+  // 任务debuff：接取的目标持续消耗属性
+  Game.state.activeQuests.forEach(function(id) {
+    var q = Game.QUESTS[id];
+    if (q && q.debuff) Game.applyStat(q.debuff);
+  });
   // 学期切换时衰减动量（假期/换环境重置惯性）
   Game.decayMomentum();
 

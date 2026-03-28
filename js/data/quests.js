@@ -1,10 +1,22 @@
 window.Game = window.Game || {};
 
+// 隐式支线的进度flag → 对应任务ID映射
+// 任务未接取（被放弃）时，对应的进度不再累积
+Game.PROGRESS_QUEST_MAP = {
+  '_csCount': 'dianjing',
+  '_sportCount': 'zuqiu',
+  '_musicCount': 'yuedui',
+  '_researchCount': 'dinghui',
+  '_romanceCount': 'ganqing',
+};
+
 Game.QUESTS = {
   baoyan: {
     icon: '🎓', name: '保研',
     desc: '凭借优秀的GPA获得研究生推免资格，继续在交大或其他名校深造。',
     reward: '结局：保研上岸',
+    debuff: { mental: -3, health: -2 },
+    debuffText: '持续投入科研和绩点冲刺',
     unlockSemester: 3,
     check: (s) => s.gpa >= 3.5 && s.flags.inLab,
     reqText: (s) => [
@@ -18,6 +30,8 @@ Game.QUESTS = {
     icon: '📖', name: '考研',
     desc: '通过全国研究生入学考试，用分数证明自己的实力。',
     reward: '结局：考研成功',
+    debuff: { mental: -4, health: -2 },
+    debuffText: '长期备考消耗精力',
     unlockSemester: 5,
     check: (s) => s.gpa >= 2.5 && s.mental >= 40 && s.flags.gradSchool,
     reqText: (s) => [
@@ -32,6 +46,8 @@ Game.QUESTS = {
     icon: '✈️', name: '出国留学',
     desc: '申请海外名校，去看看更大的世界。需要优秀的GPA和足够的资金支持。',
     reward: '结局：留学海外',
+    debuff: { mental: -3, money: -3 },
+    debuffText: '标化考试和申请费持续烧钱烧脑',
     unlockSemester: 4,
     check: (s) => s.gpa >= 3.2 && s.money >= 30 && s.flags.aimAbroad,
     reqText: (s) => [
@@ -46,6 +62,8 @@ Game.QUESTS = {
     icon: '💼', name: '大厂就业',
     desc: '拿到互联网大厂的offer，成为年薪百万的打工人（起码先入个职）。',
     reward: '结局：大厂offer',
+    debuff: { mental: -3, health: -2 },
+    debuffText: '实习面试连轴转',
     unlockSemester: 5,
     check: (s) => s.mental >= 40 && s.money >= 30 && (s.flags.internship || s.flags.bigCompany) && s.flags.jobHunting,
     reqText: (s) => [
@@ -61,6 +79,8 @@ Game.QUESTS = {
     icon: '🏛️', name: '考公上岸',
     desc: '参加公务员考试，追求稳定的体制内生活。需要扎实的基础和强大的心态。',
     reward: '结局：公务员上岸',
+    debuff: { mental: -3 },
+    debuffText: '行测申论日日不停',
     unlockSemester: 6,
     check: (s) => s.gpa >= 2.5 && s.mental >= 50 && s.health >= 40,
     reqText: (s) => [
@@ -75,6 +95,8 @@ Game.QUESTS = {
     icon: '🚀', name: '创业',
     desc: '带着交大的光环和积累的资源，开始自己的创业之路。',
     reward: '结局：创业起步',
+    debuff: { mental: -2, money: -3 },
+    debuffText: '创业烧钱又烧脑',
     unlockSemester: 4,
     check: (s) => s.mental >= 50 && s.money >= 40 && s.flags.startup,
     reqText: (s) => [
@@ -90,6 +112,8 @@ Game.QUESTS = {
     icon: '🔫', name: 'CS电竞',
     desc: '从宿舍娱乐到校队比赛，再到职业试训。你的CS天赋，也许能成为事业。',
     reward: '结局：电竞传奇',
+    debuff: { health: -2, gpa: -0.05 },
+    debuffText: '每天训练占用大量时间',
     unlockSemester: 1,
     hidden: {
       revealCheck: function(s) { return (s.flags._csCount || 0) >= 3; },
@@ -106,6 +130,8 @@ Game.QUESTS = {
     icon: '⚽', name: '足球联赛',
     desc: '从跑步健身到加入院足球队。你在绿茵场上的表现，也许能带队拿下交大杯。',
     reward: '结局：绿茵传奇',
+    debuff: { gpa: -0.05 },
+    debuffText: '训练和比赛占用学习时间',
     unlockSemester: 1,
     hidden: {
       revealCheck: function(s) { return (s.flags._sportCount || 0) >= 3; },
@@ -124,6 +150,8 @@ Game.QUESTS = {
     icon: '🎸', name: '大学乐队',
     desc: '从自己瞎弹到组乐队排练。也许毕业晚会的舞台，就是你的主场。',
     reward: '结局：摇滚青春',
+    debuff: { gpa: -0.05 },
+    debuffText: '排练占用学习时间',
     unlockSemester: 1,
     hidden: {
       revealCheck: function(s) { return (s.flags._musicCount || 0) >= 2; },
@@ -142,6 +170,8 @@ Game.QUESTS = {
     icon: '📄', name: '顶会论文',
     desc: '从看不懂论文到自己动手写。本科生发顶会，交大之光。',
     reward: '结局：学术新星',
+    debuff: { mental: -3, health: -2 },
+    debuffText: '泡实验室写论文的日日夜夜',
     unlockSemester: 1,
     hidden: {
       revealCheck: function(s) { return s.flags.inLab && (s.flags._researchCount || 0) >= 2; },
@@ -160,6 +190,8 @@ Game.QUESTS = {
     icon: '💕', name: '感情线',
     desc: '不只是暧昧和心动，而是真正的陪伴。四年的感情，能走到最后吗？',
     reward: '结局：双向奔赴',
+    debuff: { money: -2 },
+    debuffText: '约会和维系感情需要时间和钱',
     unlockSemester: 1,
     hidden: {
       revealCheck: function(s) { return (s.flags._romanceCount || 0) >= 2; },
