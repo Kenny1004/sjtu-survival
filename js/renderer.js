@@ -194,6 +194,8 @@ Game.renderScene = function(sceneId) {
   if (Game.RARE_BLACKLIST.indexOf(sceneId) === -1) {
     choiceList = Game.injectRareChoices(choiceList);
   }
+  // 缓存注入后的选项列表，供 choose() 使用
+  Game._currentChoices = choiceList;
   var choicesHtml = '<div class="choices">';
   choiceList.forEach(function(c, i) {
     // 用范围替代固定数值显示
@@ -241,8 +243,12 @@ Game.startGame = function() {
 };
 
 Game.choose = function(index) {
-  var scene = Game.scenes[Game.state.scene];
-  var choiceList = typeof scene.choices === 'function' ? scene.choices() : scene.choices;
+  // 使用缓存的选项列表（包含注入的稀有选项）
+  var choiceList = Game._currentChoices;
+  if (!choiceList) {
+    var scene = Game.scenes[Game.state.scene];
+    choiceList = typeof scene.choices === 'function' ? scene.choices() : scene.choices;
+  }
   var choice = choiceList[index];
   // 随机化数值（随机化后的值作为动量输入）
   var ef = Game.randomizeEffect(choice.effect);

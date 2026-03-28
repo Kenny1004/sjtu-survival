@@ -120,6 +120,7 @@ Game.renderQuestPanel = function() {
 
 // 隐式任务检查：爱好积累够了就浮现
 Game.checkHiddenQuests = function() {
+  var newQuests = [];
   Object.entries(Game.QUESTS).forEach(function(entry) {
     var id = entry[0], q = entry[1];
     if (!q.hidden) return;
@@ -130,9 +131,15 @@ Game.checkHiddenQuests = function() {
     if (Game.state.activeQuests.indexOf(id) === -1) {
       Game.state.activeQuests.push(id);
     }
-    Game.updateQuestCount();
-    setTimeout(function() { Game.showHiddenQuestReveal(q); }, 300);
+    newQuests.push(q);
   });
+  if (newQuests.length > 0) {
+    Game.updateQuestCount();
+    // 排队弹出，避免多个弹窗同时出现
+    newQuests.forEach(function(q, i) {
+      setTimeout(function() { Game.showHiddenQuestReveal(q); }, 300 + i * 800);
+    });
+  }
 };
 
 Game.showHiddenQuestReveal = function(quest) {
@@ -145,10 +152,10 @@ Game.showHiddenQuestReveal = function(quest) {
       '<div class="event-modal-text" style="font-size:18px;font-weight:700;color:#fff;">' + quest.name + '</div>' +
       '<div class="event-modal-text" style="font-size:14px;color:#ccc;">' + quest.hidden.revealText + '</div>' +
       '<div class="event-modal-text" style="font-size:12px;color:var(--dim);margin-top:8px;">' + quest.desc + '</div>' +
-      '<button class="event-modal-btn" style="background:rgba(200,100,255,0.15);border-color:rgba(200,100,255,0.4);color:#d8a0ff;" id="hiddenQuestBtn">看看怎么回事</button>' +
+      '<button class="event-modal-btn" style="background:rgba(200,100,255,0.15);border-color:rgba(200,100,255,0.4);color:#d8a0ff;">看看怎么回事</button>' +
     '</div>';
   document.body.appendChild(overlay);
-  document.getElementById('hiddenQuestBtn').onclick = function() {
+  overlay.querySelector('.event-modal-btn').onclick = function() {
     overlay.style.transition = 'opacity 0.3s';
     overlay.style.opacity = '0';
     setTimeout(function() { overlay.remove(); }, 300);

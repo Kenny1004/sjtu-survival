@@ -264,11 +264,11 @@ Game.showEventModal = function(evt, callback) {
       '<div class="event-modal-icon">' + evt.text.slice(0, 2) + '</div>' +
       '<div class="event-modal-text">' + evt.text.slice(2).trim() + '</div>' +
       '<div class="event-modal-effects">' + effectsHtml + '</div>' +
-      '<button class="event-modal-btn" id="eventModalBtn">确认</button>' +
+      '<button class="event-modal-btn">确认</button>' +
     '</div>';
   document.body.appendChild(overlay);
 
-  document.getElementById('eventModalBtn').onclick = function() {
+  overlay.querySelector('.event-modal-btn').onclick = function() {
     overlay.style.animation = 'none';
     overlay.style.transition = 'opacity 0.3s';
     overlay.style.opacity = '0';
@@ -293,10 +293,10 @@ Game.showAcademicWarning = function(warningCount, callback) {
       '<div class="event-modal-effects">' +
         '<span class="event-eff-neg">⚠️ 退学警告 ' + warningCount + '/2</span>' +
       '</div>' +
-      '<button class="event-modal-btn" id="warningModalBtn">' + (isExpelled ? '接受现实' : '知道了') + '</button>' +
+      '<button class="event-modal-btn">' + (isExpelled ? '接受现实' : '知道了') + '</button>' +
     '</div>';
   document.body.appendChild(overlay);
-  document.getElementById('warningModalBtn').onclick = function() {
+  overlay.querySelector('.event-modal-btn').onclick = function() {
     overlay.style.transition = 'opacity 0.3s';
     overlay.style.opacity = '0';
     setTimeout(function() { overlay.remove(); if (callback) callback(); }, 300);
