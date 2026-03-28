@@ -108,7 +108,7 @@ Game.scenes = {
     },
     choices: [
       { text: '🏆 报名数学建模竞赛', hint: 'GPA+0.1, 心理-12, 体力-8', next: 's2_event', effect: { gpa: 0.1, mental: -12, health: -8 } },
-      { text: '🎵 加入学生乐队', hint: '心理+12, GPA-0.05, 金钱-3', next: 's2_event', effect: { mental: 12, gpa: -0.05, money: -3, flags: { _musicCount: 1, joinedBand: true } } },
+      { text: '🎵 加入学生乐队', hint: '心理+12, GPA-0.05, 金钱-3', next: 's2_event', effect: { mental: 12, gpa: -0.05, money: -3, flags: { _musicCount: 1, joinedBand: true } }, condition: function(s) { return (s.flags._musicCount || 0) >= 1; } },
       { text: '🔫 报名校CS电竞赛', hint: '心理+12, 体力-12, GPA-0.1, 金钱-3', next: 's2_cs_tournament', effect: { mental: 12, health: -12, gpa: -0.1, money: -3, flags: { csPlayer: true, csTournament: true, _csCount: 1 } } },
       { text: '❤️ 有人向你表白了……', hint: '???', next: 's2_romance', effect: {} },
     ],

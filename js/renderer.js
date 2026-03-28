@@ -23,6 +23,7 @@ Game.renderScene = function(sceneId) {
       '<div class="subtitle">一款关于选择与生存的文字冒险游戏</div>' +
       '<div class="scene-text">' + scene.text.replace(/\n/g,'<br>') + '</div>' +
       '<button class="start-btn" onclick="renderScene(\'classSelect\')">📖 选择你的身份</button>' +
+      '<div style="margin-top:24px;font-size:11px;color:var(--dim);text-align:center;">部分选项经历来源于身边同学，请勿对号入座，仅供娱乐！</div>' +
     '</div>';
     return;
   }
